@@ -20,6 +20,11 @@ namespace ShapeScape.Shapes
             // Three verticies
             this.Verticies = new float2[3];
             this.Color = RandomUtils.RandomColor();
+
+            for (int i = 0; i < 3; i++)
+            {
+                this.Verticies[i] = RandomUtils.RandomCanvasPosition();
+            }
         }
 
         /// <summary>
@@ -29,7 +34,16 @@ namespace ShapeScape.Shapes
         /// <param name="color">Float4 of (0-1, 0-1, 0-1, 0-1)</param>
         public Triangle(float2[] verticies, float4 color)
         {
+            this.Verticies = verticies;
+            this.Color = color;
+        }
 
+        /// <summary>
+        /// Returns this triangle as a Tessel instance. Used to skip Tesselating
+        /// </summary>
+        public void asTessel()
+        {
+            throw new NotImplementedException();
         }
 
         // .v0 .v1 and .v2 extensions for easy vertex access

@@ -19,5 +19,17 @@ namespace ShapeScape.Utils
                 (float)Program.rand.NextDouble());
             return value;
         }
+
+        /// <summary>
+        /// Gets a float2 coordinate located on the canvas
+        /// </summary>
+        /// <param name="Tolerance">How much outside the canvas this position is allowed to deviate</param>
+        public static float2 RandomCanvasPosition(int Tolerance = 0)
+        {
+            // the + 1 is because we want to be able to draw right on the boundry of the image, and .Next would return the maxDimension - 1 as an upper limit
+            int x = Program.rand.Next(-Tolerance, Program.Dimensions.X + 1 + Tolerance);
+            int y = Program.rand.Next(-Tolerance, Program.Dimensions.Y + 1 + Tolerance);
+            return new float2(x, y);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TriangleNet.Geometry;
 
 namespace ShapeScape
 {
@@ -19,7 +20,12 @@ namespace ShapeScape
         public static int2 Dimensions;
         static void Main(string[] args)
         {
+            Polygon[] shapes = new Polygon[3];
 
+            foreach (var shape in shapes)
+            {
+
+            }
 
         }
     }
