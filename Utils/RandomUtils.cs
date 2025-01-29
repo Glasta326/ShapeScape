@@ -31,5 +31,14 @@ namespace ShapeScape.Utils
             int y = Program.rand.Next(-Tolerance, Program.Dimensions.Y + 1 + Tolerance);
             return new float2(x, y);
         }
+
+        /// <summary>
+        /// Returns -1 or 1 randomly
+        /// </summary>
+        /// <returns></returns>
+        public static int Coinflip()
+        {
+            return Program.rand.Next(0, 2) == 1 ? 1 : -1;
+        }
     }
 }
