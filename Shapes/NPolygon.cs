@@ -24,6 +24,7 @@ namespace ShapeScape.Shapes
         {
             int verts = Program.rand.Next(4, VLimit + 1);
             this.Verticies = new float2[verts];
+
             this.Color = RandomUtils.RandomColor();
 
             for (int i = 0; i < verts; i++)
