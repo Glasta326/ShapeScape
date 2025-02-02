@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.XPath;
 
 namespace ShapeScape.Shader.Shaders
 {
@@ -140,6 +141,152 @@ namespace ShapeScape.Shader.Shaders
             }
 
 
+        }
+
+        /// <summary>
+        /// Takes in a 2D map of tessels, where each x is a shape id and y is the list of tessels that compose that shape. it draws all shapes at once to get a score for that shape and returns a score map of each tessel
+        /// </summary>
+        [ThreadGroupSize(DefaultThreadGroupSizes.X)]
+        [GeneratedComputeShaderDescriptor]
+        public readonly partial struct ScoreAllShapes(
+            // Hate. Let me tell you how much I've come to hate this since I began this project.
+            // There are 387.44 million lines of code in utility functions that fill my codebase.
+            // If the word 'hate' was commented on every single line of those hundreds of millions of lines,
+            // it would not equal one one-billionth of the hate I feel for this function at this micro-instant.
+            // For this.
+            // Hate.
+            // Hate. 
+            ReadOnlyBuffer<Tessel> t0 ,
+            ReadOnlyBuffer<Tessel> t1,
+            ReadOnlyBuffer<Tessel> t2,
+            ReadOnlyBuffer<Tessel> t3,
+            ReadOnlyBuffer<Tessel> t4,
+            ReadOnlyBuffer<Tessel> t5,
+            ReadOnlyBuffer<Tessel> t6,
+            ReadOnlyBuffer<Tessel> t7,
+            ReadOnlyBuffer<Tessel> t8,
+            ReadOnlyBuffer<Tessel> t9,
+            ReadOnlyBuffer<Tessel> t10,
+            ReadOnlyBuffer<Tessel> t11,
+            ReadOnlyTexture2D<Rgba32, float4> baseImage, ReadWriteTexture2D<Rgba32, float4> constructorImage, ReadWriteTexture2D<Rgba32, float4> constructorCopy, ReadWriteBuffer<float> scores) : IComputeShader
+        {
+            
+            public void Execute()
+            {
+                // You never really do appreicate something untill it gets taken away from you, huh
+                int x = ThreadIds.X;
+
+                Tessel tessel0 = t0[x];
+                Tessel tessel1 = t1[x];
+                Tessel tessel2 = t2[x];
+                Tessel tessel3 = t3[x];
+                Tessel tessel4 = t4[x];
+                Tessel tessel5 = t5[x];
+                Tessel tessel6 = t6[x];
+                Tessel tessel7 = t7[x];
+                Tessel tessel8 = t8[x];
+                Tessel tessel9 = t9[x];
+                Tessel tessel10 = t10[x];
+                Tessel tessel11 = t11[x];
+                // all tessels should be same color
+
+                for (int i = 0; i < constructorImage.Width; i++)
+                {
+                    for (int j = 0; j < constructorImage.Height; j++)
+                    {
+                        // load the constructor copy with the constructor's data
+                        constructorCopy[i,j] = constructorImage[i,j];
+
+                        float4 destColor = constructorCopy[i, j].RGBA;
+
+                        float r = (tessel0.color.R * tessel0.color.A) + (destColor.R * (1 - tessel0.color.A));
+                        float g = (tessel0.color.G * tessel0.color.A) + (destColor.G * (1 - tessel0.color.A));
+                        float b = (tessel0.color.B * tessel0.color.A) + (destColor.B * (1 - tessel0.color.A));
+                        float a = tessel0.color.A + (destColor.A * (1 - tessel0.color.A));
+
+                        float4 COLOR = new float4(r, g, b, a);
+
+                        if (IsPointInTriangle(tessel0, new float2(i,j)) && tessel0.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel1, new float2(i, j)) && tessel1.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel2, new float2(i, j)) && tessel2.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel3, new float2(i, j)) && tessel3.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel4, new float2(i, j)) && tessel4.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel5, new float2(i, j)) && tessel5.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel6, new float2(i, j)) && tessel6.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel7, new float2(i, j)) && tessel7.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel8, new float2(i, j)) && tessel8.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel9, new float2(i, j)) && tessel9.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel10, new float2(i, j)) && tessel10.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+                        if (IsPointInTriangle(tessel11, new float2(i, j)) && tessel11.nothing.M11 == 1)
+                        {
+                            constructorCopy[i, j].RGBA = COLOR;
+                        }
+
+
+
+
+
+
+                    }
+                }
+
+            }
+
+            
+
+            static bool IsPointInTriangle(Tessel t, float2 p)
+            {
+                float2 v0 = t.v0;
+                float2 v1 = t.v1;
+                float2 v2 = t.v2;
+
+                float area0 = Area(p, v0, v1);
+                float area1 = Area(p, v1, v2);
+                float area2 = Area(p, v2, v0);
+
+                bool hasNeg = (area0 < 0) || (area1 < 0) || (area2 < 0);
+                bool hasPos = (area0 > 0) || (area1 > 0) || (area2 > 0);
+
+                return !(hasNeg && hasPos);
+            }
+
+            static float Area(float2 a, float2 b, float2 c)
+            {
+                return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
+            }
         }
     }
 }

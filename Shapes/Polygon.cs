@@ -40,11 +40,6 @@ namespace ShapeScape.Shapes
         /// </summary>
         public virtual float Score { get; set; } = 0f;
 
-        /// <summary>
-        /// The sequence of tessels that are used to draw this shape
-        /// </summary>
-        public virtual Tessel[] Tesselation { get; set; }
-
         public virtual void CreateChildren(int childcount, int mutationStrength, ref List<Polygon> polygons) { }
 
         public static float2[] ForceUnique(float2[] array, int nudge = 1)

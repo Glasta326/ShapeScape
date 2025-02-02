@@ -34,32 +34,32 @@ namespace ShapeScape
         /// <summary>
         /// The number of shapes the final image will be comprised of
         /// </summary>
-        public static int ShapeLimit = 2000;
+        public static int ShapeLimit = 1;
 
         /// <summary>
         /// Starts out with this many completley random shapes. on the first cycle, these are culled down to <see cref="PopulationSize"/>
         /// </summary>
-        public static int InitalPopulation = 2000;
+        public static int InitalPopulation = 50;
 
         /// <summary>
         /// The number of shapes being evolved
         /// </summary>
-        public static int PopulationSize = 250;
+        public static int PopulationSize = 50;
 
         /// <summary>
         /// Top N% survive, the rest are removed
         /// </summary>
-        public static int TopNSurvive = 5;
+        public static int TopNSurvive = 20;
 
         /// <summary>
         /// How many times the shapes get evolved
         /// </summary>
-        public static int EvolutionSteps = 8;
+        public static int EvolutionSteps = 1;
 
         /// <summary>
         /// The number of children each shape will have after population culling
         /// </summary>
-        private static int Childcount = 49;
+        private static int Childcount = 0;
 
         /// <summary>
         /// Affects how crazy mutations are. Advised to keep around 50
@@ -81,10 +81,36 @@ namespace ShapeScape
             using var constructorCanvasCopyBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(Dimensions.X, Dimensions.Y);
 
             // Create score array so it can be re-used constantly
-            float[] score = new float[Dimensions.X * Dimensions.Y];
+            float[,] score = new float[PopulationSize, 12];
+
+            // Array of tesselation arrays for each polygon
+            // Maximum amount of tessels for a shape will be from an NPolygon with 8 points (calculated by 2N - 4)
+            // i kind of hate this and wish we could just have a varying Y column for the amount of tessels in the polygon but eh
+            // cpu can suffer anyway go copy data bitch
+
+            // Please see line 152 in shaders.cs for further details]
+            const int MAX_TESSEL_SLOTS = 12; // Maximum tessellation pieces per polygo
+            Tessel[][] tessLists = new Tessel[MAX_TESSEL_SLOTS][];
+            for (int i = 0; i < MAX_TESSEL_SLOTS; i++)
+            {
+                tessLists[i] = new Tessel[PopulationSize];
+            }
+
+            using var t1 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t2 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t3 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t4 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t5 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t6 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t7 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t8 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t9 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t10 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t11 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t12 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
 
             // Load the score array 
-            using var scoreBuffer = GraphicsDevice.GetDefault().AllocateReadWriteBuffer<float>(score);
+            using var scoreBuffer = GraphicsDevice.GetDefault().AllocateReadWriteBuffer<float>(PopulationSize);
 
             // fill color
             GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer));
@@ -102,25 +128,39 @@ namespace ShapeScape
                 // Cycle through killing and breeding polygons 
                 for (int e = 0; e < EvolutionSteps; e++)
                 {
-                    for (int j = 0;j < polygons.Length; j++)
+                    // Loop through each polygon, tessellate it, and assign each tessellation
+                    // to the corresponding list.
+                    for (int j = 0; j < polygons.Length; j++)
                     {
-                        // Give the polygon a tesselation if it does not already have one
-                        if (polygons[j].Tesselation is null)
+                        // Tessellate the polygon. The returned array may have a length less than MAX_TESSEL_SLOTS.
+                        Tessel[] tessArray = Tesselator.TessellatePolygon(polygons[j]);
+
+                        // "Unzip" the tessellation array into the lists
+                        for (int t = 0; t < tessArray.Length && t < MAX_TESSEL_SLOTS; t++)
                         {
-                            polygons[j].Tesselation = Tesselator.TessellatePolygon(polygons[j]);
+                            tessLists[t][j] = tessArray[t];
+                            tessLists[t][j].nothing = new int1x1(1);
                         }
-
-                        // Allocate the tesselation
-                        using var TesselationBuffer = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(polygons[j].Tesselation);
-
-                        // Run the color difference shader and copy the score into the score array
-                        GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.DrawAndScore(
-                            baseImageBuffer, constructorCanvasBuffer, constructorCanvasCopyBuffer, TesselationBuffer, scoreBuffer));
-                        scoreBuffer.CopyTo(score);
-
-                        // Mark that polygon with its new score
-                        polygons[j].Score = score.AsParallel().Sum();
                     }
+
+                    // losing it
+                    t1.CopyFrom(tessLists[0]);
+                    t2.CopyFrom(tessLists[1]);
+                    t3.CopyFrom(tessLists[2]);
+                    t4.CopyFrom(tessLists[3]);
+                    t5.CopyFrom(tessLists[4]);
+                    t6.CopyFrom(tessLists[5]);
+                    t7.CopyFrom(tessLists[6]);
+                    t8.CopyFrom(tessLists[7]);
+                    t9.CopyFrom(tessLists[8]);
+                    t10.CopyFrom(tessLists[9]);
+                    t11.CopyFrom(tessLists[10]);
+                    t12.CopyFrom(tessLists[11]);
+                    GraphicsDevice.GetDefault().For(PopulationSize, new Shaders.ScoreAllShapes(
+                        t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12,
+                        baseImageBuffer, constructorCanvasBuffer, constructorCanvasCopyBuffer, scoreBuffer));
+
+                    constructorCanvasCopyBuffer.SaveImage("TestResult.png");
 
                     // Sort the polygons by their scores and keep the top TopNSurvive ratio of them. the rest are nullified
                     polygons = polygons.OrderBy(d => d.Score).ToArray();
@@ -139,27 +179,7 @@ namespace ShapeScape
                     polygons = polygons1.ToArray();
                 }
 
-                // Score the polygons one more time, to account for the new children from the end of the main evo loop
-                for (int j = 0; j < polygons.Length; j++)
-                {
-                    // Give the polygon a tesselation if it does not already have oen
-                    if (polygons[j].Tesselation is null)
-                    {
-                        polygons[j].Tesselation = Tesselator.TessellatePolygon(polygons[j]);
-                    }
 
-                    // Load the score array and tessel array into GPU
-                    // Note : We load score into GPU without resetting its contents, this is because the values get overriden in GPU so it doesnt matter
-                    using var TesselationBuffer = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(polygons[j].Tesselation);
-
-                    // Run the color difference shader and copy the score into the score array
-                    GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.DrawAndScore(
-                        baseImageBuffer, constructorCanvasBuffer, constructorCanvasCopyBuffer, TesselationBuffer, scoreBuffer));
-                    scoreBuffer.CopyTo(score);
-
-                    // Mark that polygon with its new score
-                    polygons[j].Score = score.AsParallel().Sum();
-                }
 
                 // Find the best polygon and draw it to the constructor canvas
                 Polygon winner = polygons.OrderBy(d => d.Score).ToArray()[0];
@@ -214,5 +234,23 @@ namespace ShapeScape
                 _ => throw new InvalidOperationException("Unexpected shape type")
             };;
         }
+        public static T[][] Split2DArray<T>(T[,] input)
+        {
+
+            int width = input.GetLength(0);
+            T[][] result = new T[12][];
+
+            for (int i = 0; i < 12; i++)
+            {
+                result[i] = new T[width];
+                for (int j = 0; j < width; j++)
+                {
+                    result[i][j] = input[i, j];
+                }
+            }
+
+            return result;
+        }
+
     }
 }
