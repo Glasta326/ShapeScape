@@ -22,7 +22,7 @@ namespace ShapeScape
         /// <summary>
         /// Name of the file being reconstructed
         /// </summary>
-        public static string Filename = "MDTrailer.jpg";
+        public static string Filename = "SolverLogo.png";
         public static string ImagePath = Path.Combine(FileUtils.WorkingDirectory, Filename);
 
         /// <summary>

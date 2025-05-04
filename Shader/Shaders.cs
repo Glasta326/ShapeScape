@@ -139,6 +139,8 @@ namespace ShapeScape.Shader.Shaders
 
         }
 
+        // TODO : why the fuck does this act differently to the other function?????
+        // It clearly kind of works but something is fucked with the alpha channel? and i cant tell
         /// <summary>
         /// Takes in a 2D map of tessels, where each x is a shape id and y is the list of tessels that compose that shape. it draws all shapes at once to get a score for that shape and returns a score map of each tessel
         /// </summary>
@@ -260,7 +262,7 @@ namespace ShapeScape.Shader.Shaders
                     }
                 }
 
-                scores[x] = scoreSum / (constructorImage.Width * constructorImage.Height); // Average diff
+                scores[x] = scoreSum; // Average diff
             }
 
             
