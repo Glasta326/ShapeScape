@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+// TODO : Sometimes still crashes the tesselator because of those stupid indential X coords or Y coords or something
 namespace ShapeScape.Shapes
 {
     /// <summary>
@@ -44,9 +45,9 @@ namespace ShapeScape.Shapes
             // 4 verticies
             this.Verticies = new float2[4];
 
-            topLeft = TopLeft;
-            dimensions = Dimensions;
-            this.Color = color;
+            topLeft = new float2(TopLeft.X, TopLeft.Y);
+            dimensions = new float2(dimensions.X, dimensions.Y);
+            this.Color = new float4(color.X, color.Y, color.Z, color.A);
 
             SetVerticies();
         }
@@ -58,9 +59,9 @@ namespace ShapeScape.Shapes
         {
             for (int i = 0; i < childcount; i++)
             {
-                float2 topLeftGenes = this.topLeft;
-                float2 dimGenes = this.dimensions;
-                float4 colorGenes = this.Color;
+                float2 topLeftGenes = new float2(this.topLeft.X, this.topLeft.Y);
+                float2 dimGenes = new float2(this.dimensions.X, this.dimensions.Y);
+                float4 colorGenes = new float4(Color.X, Color.Y, Color.Z, Color.A);
 
                 // shuffle around the topLeft a bit
                 topLeftGenes.X += (float)Program.rand.NextDouble() * RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength);
@@ -71,8 +72,23 @@ namespace ShapeScape.Shapes
 
                 // modify color
                 int channel = Program.rand.Next(0, 4);
-                Color[channel] += RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength) / 200f;
-                
+                float diff = RandomUtils.Coinflip() * (float)Program.rand.Next(0, mutationStrength) / 200f;
+                switch (channel)
+                {
+                    case 0:
+                        colorGenes.X += diff;
+                        break;
+                    case 1:
+                        colorGenes.Y += diff;
+                        break;
+                    case 2:
+                        colorGenes.Z += diff;
+                        break;
+                    case 3:
+                        colorGenes.W += diff;
+                        break;
+                }
+
 
                 polygons.Add(new Rectangle(topLeftGenes, dimGenes, colorGenes));
             }

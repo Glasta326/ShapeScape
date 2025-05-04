@@ -35,14 +35,20 @@ namespace ShapeScape.Shapes
         /// </summary>
         /// <param name="verticies">Float2 array of [v0, v1 ,v2]</param>
         /// <param name="color">Float4 of (0-1, 0-1, 0-1, 0-1)</param>
-        public Triangle(float2[] verticies, float4 color)
+        private Triangle(float2[] verticies, float4 color)
         {
-            this.Verticies = verticies;
-            this.Color = color;
+            // Avoid creating references and instead we want new copies of the data
+            this.Verticies = verticies.Select(v => new float2(v.X, v.Y)).ToArray();
+            this.Color = new float4(color.X, color.Y, color.Z, color.A);
 
             this.Verticies = ForceUnique(this.Verticies);
         }
 
+        // HAHAHAHHAA IVE FOUND THE ISSUE
+        // HAHAHHAHA WHEN MODIFYING THE VALUES TO CREATE A MUTATED CHILD IT ACCIDENTLY MODIFIES THE EXISITNG SHAPE TOO
+        // I DIDNT CREATE COPIES I CREATED REFERENCE VALUES SO THE CHANGES APPLIED TO THIS SHAPE TOOOOO
+        // this fucking explains how the score was going down but not consistently and could sometimes get worse AND
+        // it also explains how the shapelist endedup being filled with a billion duplicates
         /// <summary>
         /// Creates more triangles based on this triangle with similar but different properties
         /// </summary>
@@ -50,9 +56,9 @@ namespace ShapeScape.Shapes
         {
             for (int i = 0; i < childcount; i++)
             {
-                float2[] vertGenes = this.Verticies;
-                float4 colorGenes = this.Color;
-                
+                float2[] vertGenes = this.Verticies.Select(v => new float2(v.X, v.Y)).ToArray();
+                float4 colorGenes = new float4(Color.X, Color.Y, Color.Z, Color.A);
+
                 // Pick a random verticie and mess with it a bit
                 int vert = Program.rand.Next(0, 3);
                 vertGenes[vert].X += (float)Program.rand.NextDouble() * RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength);
@@ -64,8 +70,27 @@ namespace ShapeScape.Shapes
 
                 // modify color
                 int channel = Program.rand.Next(0, 4);
-                Color[channel] += RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength)/200f;
-                
+                // Ok so float4 is stupid and indexing it returns a copy of the value you read, meaning modifying that wont change anything
+                // instead you have to call .X or .Y OR .Z or whatever,
+                // this means instead of a neat index i need this terribleness
+
+                //colorGenes[channel] += RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength)/200f;
+                float diff = RandomUtils.Coinflip() * (float)Program.rand.Next(0, mutationStrength) / 200f;
+                switch (channel)
+                {
+                    case 0: 
+                        colorGenes.X += diff;
+                        break;
+                    case 1:
+                        colorGenes.Y += diff;
+                        break;
+                    case 2:
+                        colorGenes.Z += diff;
+                        break;
+                    case 3:
+                        colorGenes.W += diff;
+                        break;
+                }
 
                 polygons.Add(new Triangle(vertGenes, colorGenes));
             }

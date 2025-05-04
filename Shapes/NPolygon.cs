@@ -38,10 +38,15 @@ namespace ShapeScape.Shapes
         /// <summary>
         /// Constructor that sets supplied values. Designed for child shapes which inherit values from parents
         /// </summary>
-        public NPolygon(float2[] Verticies, float4 color)
+        public NPolygon(float2[] verticies, float4 color)
         {
-            this.Verticies = Verticies;
-            this.Color = color;
+            this.Verticies = new float2[verticies.Length];
+            for (int i = 0; i < verticies.Length; i++)
+            {
+                this.Verticies[i] = verticies[i];
+            }
+
+            this.Color = new float4(color.X, color.Y, color.Z, color.A);
 
             this.Verticies = ForceUnique(this.Verticies);
         }
@@ -53,8 +58,13 @@ namespace ShapeScape.Shapes
         {
             for (int i = 0; i < childcount; i++)
             {
-                float2[] vertGenes = this.Verticies;
-                float4 colorGenes = this.Color;
+                // Create a new array to avoid mutating parent's Verticies
+                float2[] vertGenes = new float2[this.Verticies.Length];
+                for (int j = 0; j < this.Verticies.Length; j++)
+                {
+                    vertGenes[j] = this.Verticies[j];
+                }
+                float4 colorGenes = new float4(Color.X, Color.Y, Color.Z, Color.A);
 
                 // Pick a random verticie and mess with it a bit
                 int vert = Program.rand.Next(0, vertGenes.Length);
@@ -71,7 +81,7 @@ namespace ShapeScape.Shapes
 
                 // modify color
                 int channel = Program.rand.Next(0, 4);
-                Color[channel] += RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength) / 200f;
+                colorGenes[channel] += RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength) / 200f;
 
 
                 polygons.Add(new NPolygon(vertGenes, colorGenes));

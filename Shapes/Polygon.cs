@@ -1,5 +1,6 @@
 ﻿using ShapeScape.Shader;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 
 namespace ShapeScape.Shapes
@@ -9,6 +10,7 @@ namespace ShapeScape.Shapes
     /// </summary>
     public abstract class Polygon
     {
+        private int name = Program.rand.Next(0, 100);
         private float2[] _verticies;
 
         /// <summary>
@@ -29,6 +31,11 @@ namespace ShapeScape.Shapes
                 _verticies = value;
             }
         }
+
+        /// <summary>
+        /// Array of tessels that compose this shape entirely
+        /// </summary>
+        public virtual Tessel[] Tesselation { get; set; }
 
         /// <summary>
         /// Color this shape will fill in. Typically random or inherited from parent
@@ -75,6 +82,7 @@ namespace ShapeScape.Shapes
             }
             return array;
         }
+
     }
 }
 
