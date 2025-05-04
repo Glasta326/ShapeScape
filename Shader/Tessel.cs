@@ -15,6 +15,6 @@ namespace ShapeScape.Shader
         public float2 v1 = Vertex1;
         public float2 v2 = Vertex2;
         public float4 color = Color;
-        public ComputeSharp.Int1x1 nothing = new int1x1(1); // used to idenify real tessels from the phantom tessels generated in the te
+        public ComputeSharp.Int1x1 nothing = new int1x1(1); // used to idenify real tessels from the phantom tessels generated in the tesselation unzipping
     }
 }
