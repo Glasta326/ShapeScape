@@ -126,17 +126,15 @@ namespace ShapeScape.Shader.Shaders
         /// <param name="tesselation">The provided tessels that make up the polygon we are drawing</param>
         [ThreadGroupSize(DefaultThreadGroupSizes.XY)]
         [GeneratedComputeShaderDescriptor]
-        public readonly partial struct FillColor(ReadWriteTexture2D<Rgba32, float4> constructorImage) : IComputeShader
+        public readonly partial struct FillColor(ReadWriteTexture2D<Rgba32, float4> constructorImage, float4 color) : IComputeShader
         {
             public void Execute()
             {
                 int x = ThreadIds.X;
                 int y = ThreadIds.Y;
 
-                constructorImage[x, y].RGBA = new float4(0f, 0f, 0f, 1);
+                constructorImage[x, y].RGBA = color;
             }
-
-
         }
 
         // TODO : why the fuck does this act differently to the other function?????
@@ -195,63 +193,62 @@ namespace ShapeScape.Shader.Shaders
                     for (int j = 0; j < constructorImage.Height; j++)
                     {
                         float4 destColor = constructorImage[i, j].RGBA;
-                        float4 Pixel = constructorImage[i, j].RGBA;
+                        float4 Pixel = constructorImage[i, j];
 
                         // Figure out what color this pixel should be if we were to draw to it
                         float r = (tessel0.color.R * tessel0.color.A) + (destColor.R * (1 - tessel0.color.A));
                         float g = (tessel0.color.G * tessel0.color.A) + (destColor.G * (1 - tessel0.color.A));
                         float b = (tessel0.color.B * tessel0.color.A) + (destColor.B * (1 - tessel0.color.A));
                         float a = tessel0.color.A + (destColor.A * (1 - tessel0.color.A));
-                        float4 COLOR = new float4(r, g, b, a);
 
                         // If this pixel is inside of our shape, set its color
                         if (IsPointInTriangle(tessel0, new float2(i,j)) && tessel0.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel1, new float2(i, j)) && tessel1.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel2, new float2(i, j)) && tessel2.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel3, new float2(i, j)) && tessel3.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel4, new float2(i, j)) && tessel4.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel5, new float2(i, j)) && tessel5.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel6, new float2(i, j)) && tessel6.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel7, new float2(i, j)) && tessel7.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel8, new float2(i, j)) && tessel8.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel9, new float2(i, j)) && tessel9.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel10, new float2(i, j)) && tessel10.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
                         if (IsPointInTriangle(tessel11, new float2(i, j)) && tessel11.nothing.M11 == 1)
                         {
-                            Pixel.RGBA = COLOR;
+                            Pixel = new float4(r, g, b, a);
                         }
 
                         // Calculate color difference for this pixel.
@@ -286,6 +283,25 @@ namespace ShapeScape.Shader.Shaders
             static float Area(float2 a, float2 b, float2 c)
             {
                 return (b.X - a.X) * (c.Y - a.Y) - (b.Y - a.Y) * (c.X - a.X);
+            }
+        }
+
+
+        /// <summary>
+        /// Converts the base image into an array of colors
+        /// </summary>
+        /// <param name="baseImage"></param>
+        /// <param name="palletteMap"></param>
+        [ThreadGroupSize(DefaultThreadGroupSizes.XY)]
+        [GeneratedComputeShaderDescriptor]
+        public readonly partial struct Pallettise(ReadOnlyTexture2D<Rgba32, float4> baseImage, ReadWriteBuffer<float4> palletteMap) : IComputeShader
+        {
+            public void Execute()
+            {
+                int x = ThreadIds.X;
+                int y = ThreadIds.Y;
+
+                palletteMap[baseImage.Width * y + x] = baseImage[x, y];
             }
         }
     }

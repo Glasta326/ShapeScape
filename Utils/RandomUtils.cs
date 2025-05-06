@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ShapeScape.ImageCache;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,11 +14,7 @@ namespace ShapeScape.Utils
         /// </summary>
         public static float4 RandomColor()
         {
-            float4 value = new float4((float)Program.rand.NextDouble(),
-                (float)Program.rand.NextDouble(),
-                (float)Program.rand.NextDouble(),
-                (float)Program.rand.NextDouble());
-            return value;
+            return PalletteCache.RandomColorWeighted();
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using ComputeSharp;
+using ShapeScape.ImageCache;
 using ShapeScape.Shader;
 using ShapeScape.Shader.Shaders;
 using ShapeScape.Shapes;
@@ -7,6 +8,11 @@ using System.Diagnostics;
 
 namespace ShapeScape
 {
+    // TODO : Ok so the original program got its colors from the image palette.
+    // We should really try doing that
+    // The rectangles used the color at their center, and the NPOLYGONS used a random color from the image
+    // We can probably just cache all the colors in the image into memory and then refer that when initalising the shapelist
+    // This actually makes alot of sense for all the problems im having
     public static class Program
     {
         /// <summary>
@@ -45,17 +51,17 @@ namespace ShapeScape
         /// <summary>
         /// Starts out with this many completley random shapes. on the first cycle, these are culled down to <see cref="PopulationSize"/>
         /// </summary>
-        public static int InitalPopulation = 500;
+        public static int InitalPopulation = 5000;
 
         /// <summary>
         /// The number of shapes being evolved
         /// </summary>
-        public static int PopulationSize = 500;
+        public static int PopulationSize = 5000;
 
         /// <summary>
         /// Top N% survive, the rest are removed
         /// </summary>
-        public static int TopNSurvive = 50;
+        public static int TopNSurvive = 100;
 
         /// <summary>
         /// How many times the shapes get evolved
@@ -65,7 +71,7 @@ namespace ShapeScape
         /// <summary>
         /// The number of children each shape will have after population culling
         /// </summary>
-        private static int Childcount = 9;
+        private static int Childcount = 49;
 
         /// <summary>
         /// Affects how crazy mutations are. Advised to keep around 50
@@ -81,6 +87,7 @@ namespace ShapeScape
             // Load the target image into memory
             using var baseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
             Dimensions = new int2(baseImageBuffer.Width, baseImageBuffer.Height);
+            PalletteCache.CreatePallette(baseImageBuffer);
 
             // Create both canvases
             using var constructorCanvasBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(Dimensions.X, Dimensions.Y);
@@ -130,7 +137,7 @@ namespace ShapeScape
             using var t12 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
 
             // Fill canvas with blank color before we start
-            GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer));
+            GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer, PalletteCache.MostCommonColor()));
 
             // Main loop - Every cycle of this, one shape is added to the final image
             for (int i = 0; i < ShapeLimit; i++)
@@ -188,7 +195,6 @@ namespace ShapeScape
                     if (e < EvolutionSteps - 1)
                     {
                         // Keep the top N and kill the rest
-                        Console.WriteLine(score[0]);
                         polygons = polygons.Take(TopNSurvive).ToArray();
 
                         // Create child shapes and re-populate the polygon array
@@ -202,6 +208,7 @@ namespace ShapeScape
 
                         polygons = polygons1.ToArray();
                     }
+                    Console.WriteLine($"Evolution cycle {e} score : {score[0]}");
                 }
 
 
@@ -244,6 +251,7 @@ namespace ShapeScape
         /// </summary>
         private static void Init(ref Polygon[] polygons)
         {
+            Console.WriteLine("Initalising shape arrays.");
             for (int i = 0; i < polygons.Length; i++)
             {
                 polygons[i] = CreateRandomShape();
