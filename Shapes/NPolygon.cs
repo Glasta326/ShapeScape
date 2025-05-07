@@ -62,7 +62,7 @@ namespace ShapeScape.Shapes
                 float2[] vertGenes = new float2[this.Verticies.Length];
                 for (int j = 0; j < this.Verticies.Length; j++)
                 {
-                    vertGenes[j] = this.Verticies[j];
+                    vertGenes[j] = new float2(this.Verticies[j].X, this.Verticies[j].Y);
                 }
                 float4 colorGenes = new float4(Color.X, Color.Y, Color.Z, Color.A);
 

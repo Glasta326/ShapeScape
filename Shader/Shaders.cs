@@ -192,7 +192,7 @@ namespace ShapeScape.Shader.Shaders
                 {
                     for (int j = 0; j < constructorImage.Height; j++)
                     {
-                        float4 destColor = constructorImage[i, j].RGBA;
+                        float4 destColor = constructorImage[i, j];
                         float4 Pixel = constructorImage[i, j];
 
                         // Figure out what color this pixel should be if we were to draw to it

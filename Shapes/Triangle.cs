@@ -58,7 +58,7 @@ namespace ShapeScape.Shapes
             {
                 float2[] vertGenes = this.Verticies.Select(v => new float2(v.X, v.Y)).ToArray();
                 float4 colorGenes = new float4(Color.X, Color.Y, Color.Z, Color.A);
-
+                
                 // Pick a random verticie and mess with it a bit
                 int vert = Program.rand.Next(0, 3);
                 vertGenes[vert].X += (float)Program.rand.NextDouble() * RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength);
@@ -91,7 +91,7 @@ namespace ShapeScape.Shapes
                         colorGenes.W += diff;
                         break;
                 }
-
+                
                 polygons.Add(new Triangle(vertGenes, colorGenes));
             }
         }

@@ -51,27 +51,27 @@ namespace ShapeScape
         /// <summary>
         /// Starts out with this many completley random shapes. on the first cycle, these are culled down to <see cref="PopulationSize"/>
         /// </summary>
-        public static int InitalPopulation = 5000;
+        public static int InitalPopulation = 500;
 
         /// <summary>
         /// The number of shapes being evolved
         /// </summary>
-        public static int PopulationSize = 5000;
+        public static int PopulationSize = 500;
 
         /// <summary>
         /// Top N% survive, the rest are removed
         /// </summary>
-        public static int TopNSurvive = 100;
+        public static int TopNSurvive = 50;
 
         /// <summary>
         /// How many times the shapes get evolved
         /// </summary>
-        public static int EvolutionSteps = 6;
+        public static int EvolutionSteps = 25;
 
         /// <summary>
         /// The number of children each shape will have after population culling
         /// </summary>
-        private static int Childcount = 49;
+        private static int Childcount = 9;
 
         /// <summary>
         /// Affects how crazy mutations are. Advised to keep around 50
@@ -82,12 +82,16 @@ namespace ShapeScape
 
         static void Main(string[] args)
         {
+            // debug
+            rand = new Random(1000);
+            
+
             Stopwatch sw = Stopwatch.StartNew();
 
             // Load the target image into memory
             using var baseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
             Dimensions = new int2(baseImageBuffer.Width, baseImageBuffer.Height);
-            PalletteCache.CreatePallette(baseImageBuffer);
+            //PalletteCache.CreatePallette(baseImageBuffer);
 
             // Create both canvases
             using var constructorCanvasBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(Dimensions.X, Dimensions.Y);
@@ -137,11 +141,12 @@ namespace ShapeScape
             using var t12 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
 
             // Fill canvas with blank color before we start
-            GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer, PalletteCache.MostCommonColor()));
+            GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer, new float4(0f, 0f, 0f, 1f)));
 
             // Main loop - Every cycle of this, one shape is added to the final image
             for (int i = 0; i < ShapeLimit; i++)
             {
+                float best = float.PositiveInfinity;
                 sw.Start();
 
                 // Initalise the shape array with random shapes
@@ -152,6 +157,15 @@ namespace ShapeScape
                 // Cycle through killing and breeding polygons 
                 for (int e = 0; e < EvolutionSteps; e++)
                 {
+                    // Something goes wrong RIGHT HERE on seed 1000.
+                    // Somehow, the score goes UP
+                    // Not between seperate shapes
+                    // the SAME EVOLUTION CYCLE
+                    // THE SHAPE FROM LAST CYCLE SHOULD STILL BE HERE SO AT THE UTTER WORST SCORE STAYS THE SAMEEE
+                    if (e == 0)
+                    {
+
+                    }
                     for (int j = 0; j < polygons.Length; j++)
                     {
                         Tessel[] tessArray = Tesselator.TessellatePolygon(polygons[j]);
@@ -208,7 +222,17 @@ namespace ShapeScape
 
                         polygons = polygons1.ToArray();
                     }
-                    Console.WriteLine($"Evolution cycle {e} score : {score[0]}");
+
+                    Console.WriteLine($"Evolution cycle {e} score : {score[0]} : Duration : {sw.ElapsedMilliseconds}ms");
+                    sw.Restart();
+                    if (score[0] < best)
+                    {
+                        best = score[0];
+                    }
+                    if (score[0] > best)
+                    {
+
+                    }
                 }
 
 
@@ -262,8 +286,8 @@ namespace ShapeScape
             int shapeType = rand.Next(3); // Adjust the number based on how many shape types you have
             return shapeType switch
             {
-                0 => new NPolygon(),
-                1 => new NPolygon(),
+                0 => new Triangle(),
+                1 => new Triangle(),
                 2 => new Triangle(),
                 _ => throw new InvalidOperationException("Unexpected shape type")
             };

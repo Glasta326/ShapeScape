@@ -28,10 +28,10 @@ namespace ShapeScape.ImageCache
             colorBuffer.CopyTo(colors);
             colorBuffer.Dispose();
 
-            // Convert array into dictionary with appearance counts as values
-            // Use PLINQ to group and count colors in parallel
+            Console.WriteLine("Grouping colors");
             var transform = colors.AsParallel().GroupBy(c => c).ToDictionary(g => g.Key, g => g.Count());
-            // Thread-safe dictionary population
+
+            Console.WriteLine("Populating dictionary");
             foreach (var kvp in transform.OrderByDescending(kvp => kvp.Value))
             {
                 Pallette[kvp.Key] = kvp.Value;

@@ -14,7 +14,11 @@ namespace ShapeScape.Utils
         /// </summary>
         public static float4 RandomColor()
         {
-            return PalletteCache.RandomColorWeighted();
+            float4 value = new float4((float)Program.rand.NextDouble(),
+                (float)Program.rand.NextDouble(),
+                (float)Program.rand.NextDouble(),
+                (float)Program.rand.NextDouble());
+            return value;
         }
 
         /// <summary>
