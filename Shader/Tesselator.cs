@@ -16,9 +16,14 @@ namespace ShapeScape.Shader
         /// </summary>
         public static Tessel[] TessellatePolygon(Polygon shape)
         {
+            // Pre-Computed tessel skipping
             if (shape is Triangle t)
             {
                 return [t.asTessel()];
+            }
+            if (shape is Rectangle r)
+            {
+                return r.Tesselation;
             }
 
             List<Tessel> result = new List<Tessel>();
@@ -27,6 +32,7 @@ namespace ShapeScape.Shader
 
             // Convert Float2 points to Float2Vertex objects
             var vertices = verticies.Select(p => new Float2Vertex(p)).ToArray();
+
 
             // Perform Delaunay triangulation
             var triangulation = DelaunayTriangulation<Float2Vertex, Float2Cell>.Create(vertices, 2);

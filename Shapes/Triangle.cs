@@ -1,4 +1,5 @@
 ﻿using ComputeSharp;
+using ShapeScape.ImageCache;
 using ShapeScape.Shader;
 using ShapeScape.Utils;
 using System;
@@ -42,6 +43,7 @@ namespace ShapeScape.Shapes
             this.Color = new float4(color.X, color.Y, color.Z, color.A);
 
             this.Verticies = ForceUnique(this.Verticies);
+
         }
 
         // HAHAHAHHAA IVE FOUND THE ISSUE
@@ -52,6 +54,7 @@ namespace ShapeScape.Shapes
         /// <summary>
         /// Creates more triangles based on this triangle with similar but different properties
         /// </summary>
+        
         public override void CreateChildren(int childcount, int mutationStrength, ref List<Polygon> polygons)
         {
             for (int i = 0; i < childcount; i++)

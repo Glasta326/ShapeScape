@@ -19,6 +19,8 @@ namespace ShapeScape.Utils
                 (float)Program.rand.NextDouble(),
                 (float)Program.rand.NextDouble());
             return value;
+            
+            //return PalletteCache.RandomColor();
         }
 
         /// <summary>

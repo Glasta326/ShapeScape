@@ -1,11 +1,12 @@
-﻿using ShapeScape.Utils;
+﻿using ShapeScape.ImageCache;
+using ShapeScape.Shader;
+using ShapeScape.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-// TODO : Sometimes still crashes the tesselator because of those stupid indential X coords or Y coords or something
 namespace ShapeScape.Shapes
 {
     /// <summary>
@@ -19,22 +20,27 @@ namespace ShapeScape.Shapes
         /// </summary>
         public Rectangle()
         {
-            // 4 verticies
+            // Four verticies compose a rectangle
             this.Verticies = new float2[4];
             this.Color = RandomUtils.RandomColor();
 
-            // pick a spot to start the rectangle
-            // then pick a random width and height
-            // Note : width and height and the remaining 3 verticies can contain negatives
+            // Set the position this rectangle is drawn relative to
             topLeft = RandomUtils.RandomCanvasPosition();
+            // The rectangle can have width or height ranging half the size of the canvas each way
+            float2 dimensions = new float2(
+                Program.rand.Next((int)(-Program.Dimensions.X / 2f), (int)(Program.Dimensions.X / 2f)),
+                Program.rand.Next((int)(-Program.Dimensions.Y / 2f), (int)(Program.Dimensions.Y / 2f)));
 
-            dimensions = new float2(Program.rand.Next(-Program.Dimensions.X, Program.Dimensions.X + 1),
-                Program.rand.Next(-Program.Dimensions.Y, Program.Dimensions.Y + 1));
+            // This vertex order makes more sense for triangulating
+            this.Verticies[1] = new float2(topLeft.X + 0, topLeft.Y + dimensions.Y); // Bottom left
+            this.Verticies[2] = new float2(topLeft.X + dimensions.X, topLeft.Y + 0); // Top right
+            this.Verticies[3] = new float2(topLeft.X + dimensions.X, topLeft.Y + dimensions.Y); // Bottom right
 
-            SetVerticies();
+            // Manually tesselate because the Tesselator really really dislikes rectangles
+            this.Tesselation = new Tessel[2];
+            Tesselation[0] = new Tessel(this.Verticies[0], this.Verticies[1], this.Verticies[2], this.Color);
+            Tesselation[1] = new Tessel(this.Verticies[1], this.Verticies[2], this.Verticies[3], this.Color);
 
-            // Note : any reference to direction like "top left" or "bottom right" are kind of just names
-            // If the topLeft value is at 800, 800. and the dimensions are -100,-100. then the topLeft value would actually be at the bottom right of the rectangle
         }
 
         /// <summary>
@@ -44,12 +50,20 @@ namespace ShapeScape.Shapes
         {
             // 4 verticies
             this.Verticies = new float2[4];
-
-            topLeft = new float2(TopLeft.X, TopLeft.Y);
-            dimensions = new float2(dimensions.X, dimensions.Y);
             this.Color = new float4(color.X, color.Y, color.Z, color.A);
 
-            SetVerticies();
+            this.topLeft = new float2(TopLeft.X, TopLeft.Y);
+            this.dimensions = new float2(Dimensions.X, Dimensions.Y);
+
+            // This vertex order makes more sense for triangulating
+            this.Verticies[1] = new float2(topLeft.X + 0, topLeft.Y + dimensions.Y); // Bottom left
+            this.Verticies[2] = new float2(topLeft.X + dimensions.X, topLeft.Y + 0); // Top right
+            this.Verticies[3] = new float2(topLeft.X + dimensions.X, topLeft.Y + dimensions.Y); // Bottom right
+
+            // Manually tesselate because the Tesselator really really dislikes rectangles
+            this.Tesselation = new Tessel[2];
+            Tesselation[0] = new Tessel(this.Verticies[0], this.Verticies[1], this.Verticies[2], this.Color);
+            Tesselation[1] = new Tessel(this.Verticies[1], this.Verticies[2], this.Verticies[3], this.Color);
         }
 
         /// <summary>
@@ -59,16 +73,16 @@ namespace ShapeScape.Shapes
         {
             for (int i = 0; i < childcount; i++)
             {
+
                 float2 topLeftGenes = new float2(this.topLeft.X, this.topLeft.Y);
                 float2 dimGenes = new float2(this.dimensions.X, this.dimensions.Y);
                 float4 colorGenes = new float4(Color.X, Color.Y, Color.Z, Color.A);
-
+               
+                
                 // shuffle around the topLeft a bit
                 topLeftGenes.X += (float)Program.rand.NextDouble() * RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength);
                 topLeftGenes.Y += (float)Program.rand.NextDouble() * RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength);
 
-                // Scale the dimensions by a bit
-                dimGenes *= 1 + ( RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength) / 200f);
 
                 // modify color
                 int channel = Program.rand.Next(0, 4);
@@ -88,34 +102,26 @@ namespace ShapeScape.Shapes
                         colorGenes.W += diff;
                         break;
                 }
-
+                
 
                 polygons.Add(new Rectangle(topLeftGenes, dimGenes, colorGenes));
             }
         }
 
-        /// <summary>
-        /// Once topleft and dimensions are known, this just sets the four vertex values of the shape
-        /// </summary>
-        private void SetVerticies()
-        {
-            // set the top right, bottom left and bottom right corners
-            Verticies[1] = new float2(topLeft.X + dimensions.X + 1, topLeft.Y);
-            Verticies[2] = new float2(topLeft.X, topLeft.Y + dimensions.Y + 2);
-            Verticies[3] = new float2(topLeft.X + dimensions.X + 3, topLeft.Y + dimensions.Y + 4);
-        }
-
         #region Shorthand Accessors
 
+        /// <summary>
+        /// Shorthand to Verticies[0]
+        /// </summary>
         public float2 topLeft
         {
             get
             {
-                return Verticies[0];
+                return this.Verticies[0];
             }
             set
             {
-                Verticies[0] = value;
+                this.Verticies[0] = value;
             }
         }
 

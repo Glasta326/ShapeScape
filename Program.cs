@@ -66,7 +66,7 @@ namespace ShapeScape
         /// <summary>
         /// How many times the shapes get evolved
         /// </summary>
-        public static int EvolutionSteps = 25;
+        public static int EvolutionSteps = 1;
 
         /// <summary>
         /// The number of children each shape will have after population culling
@@ -82,16 +82,13 @@ namespace ShapeScape
 
         static void Main(string[] args)
         {
-            // debug
-            rand = new Random(1000);
-            
-
+            // Set seed for debugging
             Stopwatch sw = Stopwatch.StartNew();
 
             // Load the target image into memory
             using var baseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
             Dimensions = new int2(baseImageBuffer.Width, baseImageBuffer.Height);
-            //PalletteCache.CreatePallette(baseImageBuffer);
+            PalletteCache.CreatePallette(baseImageBuffer);
 
             // Create both canvases
             using var constructorCanvasBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(Dimensions.X, Dimensions.Y);
@@ -141,7 +138,7 @@ namespace ShapeScape
             using var t12 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
 
             // Fill canvas with blank color before we start
-            GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer, new float4(0f, 0f, 0f, 1f)));
+            GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer, PalletteCache.MostCommonColor()));
 
             // Main loop - Every cycle of this, one shape is added to the final image
             for (int i = 0; i < ShapeLimit; i++)
@@ -255,7 +252,11 @@ namespace ShapeScape
                 _tesselationBuffer.Dispose();
 
                 // just to keep progress
-                constructorCanvasBuffer.SaveImage("Progress.png");
+                if (i % 1 == 0)
+                {
+                    constructorCanvasBuffer.SaveImage("Progress.png");
+                }
+                
                 sw.Stop();
                 Console.WriteLine($"Created shape {i}/{ShapeLimit} in {sw.ElapsedMilliseconds}ms with a score of {score[0]}");
                 ScoreTracker = winner.Score;
@@ -283,12 +284,11 @@ namespace ShapeScape
         }
         private static Polygon CreateRandomShape()
         {
-            int shapeType = rand.Next(3); // Adjust the number based on how many shape types you have
+            int shapeType = rand.Next(2); // Adjust the number based on how many shape types you have
             return shapeType switch
             {
-                0 => new Triangle(),
-                1 => new Triangle(),
-                2 => new Triangle(),
+                0 => new Rectangle(),
+                1 => new Rectangle(),
                 _ => throw new InvalidOperationException("Unexpected shape type")
             };
         }

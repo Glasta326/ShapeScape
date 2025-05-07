@@ -201,7 +201,8 @@ namespace ShapeScape.Shader.Shaders
                         float b = (tessel0.color.B * tessel0.color.A) + (destColor.B * (1 - tessel0.color.A));
                         float a = tessel0.color.A + (destColor.A * (1 - tessel0.color.A));
 
-                        // If this pixel is inside of our shape, set its color
+                        // If this pixel is inside any of the tessels that compose this shape, that means the pixel is inside our shape bounds and we need to "draw it on the canvas"
+                        // Even though we dont actually bother drawing to the canvas because there's no point in doing so
                         if (IsPointInTriangle(tessel0, new float2(i,j)) && tessel0.nothing.M11 == 1)
                         {
                             Pixel = new float4(r, g, b, a);
