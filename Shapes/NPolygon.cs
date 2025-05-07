@@ -81,7 +81,22 @@ namespace ShapeScape.Shapes
 
                 // modify color
                 int channel = Program.rand.Next(0, 4);
-                colorGenes[channel] += RandomUtils.Coinflip() * Program.rand.Next(0, mutationStrength) / 200f;
+                float diff = RandomUtils.Coinflip() * (float)Program.rand.Next(0, mutationStrength) / 200f;
+                switch (channel)
+                {
+                    case 0:
+                        colorGenes.X += diff;
+                        break;
+                    case 1:
+                        colorGenes.Y += diff;
+                        break;
+                    case 2:
+                        colorGenes.Z += diff;
+                        break;
+                    case 3:
+                        colorGenes.W += diff;
+                        break;
+                }
 
 
                 polygons.Add(new NPolygon(vertGenes, colorGenes));
