@@ -88,16 +88,6 @@ namespace ShapeScape
             // Set seed for debugging
             Stopwatch sw = Stopwatch.StartNew();
 
-
-            Bitmap bmp;
-            bmp = new Bitmap(Path.Combine(FileUtils.WorkingDirectory, "MDTrailer.jpg"));
-            DisplayForm.Display(bmp);
-
-            Thread.Sleep(4000);
-
-            bmp = new Bitmap(Path.Combine(FileUtils.WorkingDirectory, "SolverLogo.png"));
-            DisplayForm.Display(bmp);
-            return;
             // Load the target image into memory
             using var baseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
             Dimensions = new int2(baseImageBuffer.Width, baseImageBuffer.Height);
