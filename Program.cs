@@ -1,10 +1,12 @@
 ﻿using ComputeSharp;
 using ShapeScape.ImageCache;
+using ShapeScape.Rendering;
 using ShapeScape.Shader;
 using ShapeScape.Shader.Shaders;
 using ShapeScape.Shapes;
 using ShapeScape.Utils;
 using System.Diagnostics;
+using Rectangle = ShapeScape.Shapes.Rectangle;
 
 namespace ShapeScape
 {
@@ -80,11 +82,22 @@ namespace ShapeScape
 
         #endregion
 
+        [STAThread]
         static void Main(string[] args)
         {
             // Set seed for debugging
             Stopwatch sw = Stopwatch.StartNew();
 
+
+            Bitmap bmp;
+            bmp = new Bitmap(Path.Combine(FileUtils.WorkingDirectory, "MDTrailer.jpg"));
+            DisplayForm.Display(bmp);
+
+            Thread.Sleep(4000);
+
+            bmp = new Bitmap(Path.Combine(FileUtils.WorkingDirectory, "SolverLogo.png"));
+            DisplayForm.Display(bmp);
+            return;
             // Load the target image into memory
             using var baseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
             Dimensions = new int2(baseImageBuffer.Width, baseImageBuffer.Height);
@@ -269,6 +282,11 @@ namespace ShapeScape
             constructorCanvasCopyBuffer.Dispose();
             constructorCanvasBuffer.Dispose();
             baseImageBuffer.Dispose();
+        }
+
+        private static void SetupDisplay()
+        {
+
         }
 
         /// <summary>

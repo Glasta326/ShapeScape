@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <RootNamespace>ShapeScape</RootNamespace>
     <AssemblyName>ShapeScape</AssemblyName>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<UseWindowsForms>True</UseWindowsForms>
+	<StartupObject></StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +24,13 @@
     <PackageReference Include="ComputeSharp" Version="3.1.0" />
     <PackageReference Include="ComputeSharp.Core" Version="3.1.0" />
     <PackageReference Include="MIConvexHull" Version="1.1.19.1019" />
+    <PackageReference Include="OpenTK" Version="4.9.4" />
+    <PackageReference Include="OpenTK.Graphics" Version="4.9.4" />
+    <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />
+    <PackageReference Include="OpenTK.Windowing.Common" Version="4.9.4" />
+    <PackageReference Include="OpenTK.Windowing.Desktop" Version="4.9.4" />
+    <PackageReference Include="SkiaSharp" Version="3.119.0" />
+    <PackageReference Include="SkiaSharp.Views" Version="3.119.0" />
   </ItemGroup>
 
   <ItemGroup>

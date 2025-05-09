@@ -28,6 +28,7 @@ namespace ShapeScape.ImageCache
             colorBuffer.CopyTo(colors);
             colorBuffer.Dispose();
 
+
             Console.WriteLine("Grouping colors");
             var transform = colors.AsParallel().GroupBy(c => c).ToDictionary(g => g.Key, g => g.Count());
 
