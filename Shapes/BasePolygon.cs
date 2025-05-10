@@ -8,7 +8,7 @@ namespace ShapeScape.Shapes
     /// <summary>
     /// Base class for any shape.
     /// </summary>
-    public abstract class Polygon
+    public abstract class BasePolygon
     {
         private int name = Program.rand.Next(0, 100);
         private float2[] _verticies;
@@ -47,7 +47,7 @@ namespace ShapeScape.Shapes
         /// </summary>
         public virtual float Score { get; set; } = 0f;
 
-        public virtual void CreateChildren(int childcount, int mutationStrength, ref List<Polygon> polygons) { }
+        public virtual void CreateChildren(int childcount, int mutationStrength, ref List<BasePolygon> polygons) { }
 
         public static float2[] ForceUnique(float2[] array, int nudge = 1)
         {

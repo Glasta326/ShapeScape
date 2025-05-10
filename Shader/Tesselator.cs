@@ -13,9 +13,9 @@ namespace ShapeScape.Shader
     public static class Tesselator
     {
         /// <summary>
-        /// Subdivides a <see cref="Polygon"/> into many <see cref="Tessel"/> objects which are then rendered and scored with the GPU
+        /// Subdivides a <see cref="BasePolygon"/> into many <see cref="Tessel"/> objects which are then rendered and scored with the GPU
         /// </summary>
-        public static Tessel[] TessellatePolygon(Polygon shape)
+        public static Tessel[] TessellatePolygon(BasePolygon shape)
         {
             // Pre-Computed tessel skipping
             if (shape is Triangle t)

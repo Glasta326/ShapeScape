@@ -6,6 +6,8 @@ using ShapeScape.Shader.Shaders;
 using ShapeScape.Shapes;
 using ShapeScape.Utils;
 using System.Diagnostics;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using Rectangle = ShapeScape.Shapes.Rectangle;
 
 namespace ShapeScape
@@ -17,26 +19,105 @@ namespace ShapeScape
     // This actually makes alot of sense for all the problems im having
     public static class Program
     {
+        // Values set by the user
+        #region Generation settings
+
         /// <summary>
-        /// Random class shared program-wide.
+        /// Seed used to control <see cref="Program.rand"/>. <br/>
+        /// Defaults to -1 (Random seed)
+        /// </summary>
+        public static int seed = -1;
+
+        /// <summary>
+        /// Name of the image file to be reconstructed.<br/>
+        /// Defaults to null
+        /// </summary>
+        public static string Filename = null;
+
+        /// <summary>
+        /// Total amount of shapes that will get drawn to complete the image <br/> 
+        /// Defaults to 512
+        /// </summary>
+        public static int TotalShapes = 512;
+
+        /// <summary>
+        /// Total amount of shapes being evolved in each cycle <br/>
+        /// Defaults to 500
+        /// </summary>
+        public static int ShapePopulation = 500;
+
+        /// <summary>
+        /// How many times to cycle the shapes before selecting one to add to the canvas <br/>
+        /// Defaults to 10
+        /// </summary>
+        public static int EvolutionCycles = 2;
+
+        /// <summary>
+        /// The shapes with the <see cref="SurvivalThreshold"/> lowest scores survive, the rest all die
+        /// </summary>
+        public static int SurvivalThreshold = 50;
+
+        /// <summary>
+        /// Controls how strong mutation effects between generations are.<br/>
+        /// Advised to keep around 50
+        /// </summary>
+        public static int MutationStrength = 60;
+
+        /// <summary>
+        /// Whether to initalise <see cref="PalletteCache"/> and use Pallette based colors when generating shapes
+        /// </summary>
+        public static bool Palletise = false;
+
+        #endregion
+
+        // Values used internally and values calculated from user settings
+        #region Fields
+
+        /// <summary>
+        /// Calculate from <see cref="ShapePopulation"/> and <see cref="SurvivalThreshold"/>.<br/>
+        /// At the end of an evolution cycle, every shape will produce this many children
+        /// </summary>
+        public static int ChildCount => (int)Math.Round((double)ShapePopulation / (double)SurvivalThreshold) - 1; // -1 to account for the parent
+
+        // TODO : In a "release build" or something i don't think we'd use a working directory?
+        // Either user just submits file path or somehow i get a file selector form thingy working
+        // Actually we might just make it so the "workingDirectory" is whatever folder the program is stored in
+        // Just modify FileUtils.WorkingDirectory to not combine with "WorkingDirectory" and boom
+        /// <summary>
+        /// File path to the target image
+        /// </summary>
+        public static string ImagePath => Path.Combine(FileUtils.WorkingDirectory, Filename);
+
+        // Techinically this should be grouped into <see cref="RandomUtils"/> because it would make more sense there, but i'm very used to MainClass.rand.Next() calls
+        /// <summary>
+        /// Random class shared program-wide. <br/>
         /// </summary>
         public static Random rand = new Random();
 
         /// <summary>
-        /// The dimensions of the canvas the program is working on
+        /// The texture of the base image
         /// </summary>
-        public static int2 Dimensions;
+        public static ReadOnlyTexture2D<Rgba32, float4> BaseImageBuffer;
 
         /// <summary>
-        /// Name of the file being reconstructed
+        /// Width and height of <see cref="Program.BaseImageBuffer"/>
         /// </summary>
-        public static string Filename = "SolverLogo.png";
-        public static string ImagePath = Path.Combine(FileUtils.WorkingDirectory, Filename);
+        public static int2 Dimensions => new int2(BaseImageBuffer.Width, BaseImageBuffer.Height);
 
         /// <summary>
-        /// Keeps track of the total score of our image
+        /// Interal timer used for generation time feedback
         /// </summary>
-        public static float ScoreTracker = float.PositiveInfinity;
+        private static Stopwatch sw = new Stopwatch();
+
+        /// <summary>
+        /// For displaying to <see cref="Rendering.ImageRenderer"/>
+        /// </summary>
+        private static Bitmap ResultMap;
+
+        #endregion
+
+        
+        #region Constants
 
         /// <summary>
         /// The highest number of tessels the program can ever encounter in a single polygon is 12 <br/>
@@ -44,62 +125,36 @@ namespace ShapeScape
         /// </summary>
         public const int MAX_TESSELS = 12;
 
-        #region Settings
-        /// <summary>
-        /// The number of shapes the final image will be comprised of
-        /// </summary>
-        public static int ShapeLimit = 1000;
-
-        /// <summary>
-        /// Starts out with this many completley random shapes. on the first cycle, these are culled down to <see cref="PopulationSize"/>
-        /// </summary>
-        public static int InitalPopulation = 500;
-
-        /// <summary>
-        /// The number of shapes being evolved
-        /// </summary>
-        public static int PopulationSize = 500;
-
-        /// <summary>
-        /// Top N% survive, the rest are removed
-        /// </summary>
-        public static int TopNSurvive = 50;
-
-        /// <summary>
-        /// How many times the shapes get evolved
-        /// </summary>
-        public static int EvolutionSteps = 1;
-
-        /// <summary>
-        /// The number of children each shape will have after population culling
-        /// </summary>
-        private static int Childcount = 9;
-
-        /// <summary>
-        /// Affects how crazy mutations are. Advised to keep around 50
-        /// </summary>
-        private static int MutationStrength = 60;
-
         #endregion
 
+
+        #region Methods
         [STAThread]
         static void Main(string[] args)
         {
-            // Set seed for debugging
+            // Set all generation settings
+            //GetUserInput();
+
+            Filename = "SolverLogo.png";
+
+            // Start the clock!
             Stopwatch sw = Stopwatch.StartNew();
 
             // Load the target image into memory
-            using var baseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
-            Dimensions = new int2(baseImageBuffer.Width, baseImageBuffer.Height);
-            PalletteCache.CreatePallette(baseImageBuffer);
+            BaseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
+            if (Palletise)
+            {
+                PalletteCache.CreatePallette();
+            }
+            ResultMap = new Bitmap(Dimensions.X, Dimensions.Y);
 
             // Create both canvases
             using var constructorCanvasBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(Dimensions.X, Dimensions.Y);
             using var constructorCanvasCopyBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(Dimensions.X, Dimensions.Y);
 
             // Create score array so it can be re-used constantly
-            float[] score = new float[PopulationSize];
-            using var scoreBuffer = GraphicsDevice.GetDefault().AllocateReadWriteBuffer<float>(PopulationSize);
+            float[] score = new float[ShapePopulation];
+            using var scoreBuffer = GraphicsDevice.GetDefault().AllocateReadWriteBuffer<float>(ShapePopulation);
 
             /* Array of tesselation arrays for each polygon
             * This system is a bit terrible and confusing but that's what happens when Computesharp has ZERO documentation and nobody using it
@@ -125,47 +180,37 @@ namespace ShapeScape
             Tessel[][] tessLists = new Tessel[MAX_TESSELS][];
             for (int i = 0; i < MAX_TESSELS; i++)
             {
-                tessLists[i] = new Tessel[PopulationSize];
+                tessLists[i] = new Tessel[ShapePopulation];
             }
-            using var t1 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t2 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t3 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t4 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t5 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t6 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t7 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t8 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t9 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t10 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t11 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
-            using var t12 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(PopulationSize);
+            using var t1 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t2 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t3 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t4 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t5 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t6 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t7 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t8 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t9 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t10 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t11 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            using var t12 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
 
             // Fill canvas with blank color before we start
             GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer, PalletteCache.MostCommonColor()));
 
             // Main loop - Every cycle of this, one shape is added to the final image
-            for (int i = 0; i < ShapeLimit; i++)
+            for (int i = 0; i < TotalShapes; i++)
             {
-                float best = float.PositiveInfinity;
                 sw.Start();
 
                 // Initalise the shape array with random shapes
-                Polygon[] polygons = new Polygon[InitalPopulation];
+                BasePolygon[] polygons = new BasePolygon[ShapePopulation];
                 
-                Init(ref polygons);
+                CreateShapes(ref polygons);
 
                 // Cycle through killing and breeding polygons 
-                for (int e = 0; e < EvolutionSteps; e++)
+                for (int e = 0; e < EvolutionCycles; e++)
                 {
-                    // Something goes wrong RIGHT HERE on seed 1000.
-                    // Somehow, the score goes UP
-                    // Not between seperate shapes
-                    // the SAME EVOLUTION CYCLE
-                    // THE SHAPE FROM LAST CYCLE SHOULD STILL BE HERE SO AT THE UTTER WORST SCORE STAYS THE SAMEEE
-                    if (e == 0)
-                    {
-
-                    }
                     for (int j = 0; j < polygons.Length; j++)
                     {
                         Tessel[] tessArray = Tesselator.TessellatePolygon(polygons[j]);
@@ -193,9 +238,9 @@ namespace ShapeScape
                     t12.CopyFrom(tessLists[11]);
 
                     // Run shader
-                    GraphicsDevice.GetDefault().For(PopulationSize, new Shaders.ScoreAllShapes(
+                    GraphicsDevice.GetDefault().For(ShapePopulation, new Shaders.ScoreAllShapes(
                     t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12,
-                    baseImageBuffer, constructorCanvasBuffer, constructorCanvasCopyBuffer, scoreBuffer));
+                    BaseImageBuffer, constructorCanvasBuffer, constructorCanvasCopyBuffer, scoreBuffer));
                     scoreBuffer.CopyTo(score);
 
                     // Sort both of the arrays at once
@@ -206,18 +251,18 @@ namespace ShapeScape
                     polygons = sorted.Select(x => x.p).ToArray();
 
                     // on the last iteration we don't make any more kids
-                    if (e < EvolutionSteps - 1)
+                    if (e < EvolutionCycles - 1)
                     {
                         // Keep the top N and kill the rest
-                        polygons = polygons.Take(TopNSurvive).ToArray();
+                        polygons = polygons.Take(SurvivalThreshold).ToArray();
 
                         // Create child shapes and re-populate the polygon array
-                        List<Polygon> polygons1 = new List<Polygon>(polygons);
+                        List<BasePolygon> polygons1 = new List<BasePolygon>(polygons);
                         int limit = polygons1.Count;
                         for (int j = 0; j < limit; j++)
                         {
-                            Polygon polygon = polygons1[j];
-                            polygon.CreateChildren(Childcount, MutationStrength, ref polygons1);
+                            BasePolygon polygon = polygons1[j];
+                            polygon.CreateChildren(ChildCount, MutationStrength, ref polygons1);
                         }
 
                         polygons = polygons1.ToArray();
@@ -225,27 +270,12 @@ namespace ShapeScape
 
                     Console.WriteLine($"Evolution cycle {e} score : {score[0]} : Duration : {sw.ElapsedMilliseconds}ms");
                     sw.Restart();
-                    if (score[0] < best)
-                    {
-                        best = score[0];
-                    }
-                    if (score[0] > best)
-                    {
-
-                    }
                 }
 
 
 
                 // polygons remain sorted at the end of final evolution cycle, select best one and draw it to the canvas.
-                Polygon winner = polygons[0];
-                if (false)//winner.Score > ScoreTracker)
-                {
-                    sw.Stop();
-                    Console.WriteLine($"All shapes reduced image quality. no shape was drawn in {sw.ElapsedMilliseconds}ms");
-                    sw.Restart();
-                    continue;
-                }
+                BasePolygon winner = polygons[0];
                 
                 // Technicallyyyy we are re-tesselating this polygon again but the data for that is jumbled across the buffer sandwich  so this is significantly more convienent.
                 // Performance doesn't really matter outside of the evo loop anyway
@@ -254,15 +284,20 @@ namespace ShapeScape
                 GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.DrawToConstructor(constructorCanvasBuffer, _tesselationBuffer));
                 _tesselationBuffer.Dispose();
 
+                
+                if (i % 2 == 0)
+                {
+                    ResultMap = MapTexture(constructorCanvasBuffer.ToArray());
+                    ImageRenderer.Update(ResultMap);
+                }
                 // just to keep progress
-                if (i % 1 == 0)
+                if (i % 50 == 0)
                 {
                     constructorCanvasBuffer.SaveImage("Progress.png");
                 }
                 
                 sw.Stop();
-                Console.WriteLine($"Created shape {i}/{ShapeLimit} in {sw.ElapsedMilliseconds}ms with a score of {score[0]}");
-                ScoreTracker = winner.Score;
+                Console.WriteLine($"Created shape {i}/{TotalShapes} in {sw.ElapsedMilliseconds}ms with a score of {score[0]}");
                 sw.Restart();
             }
             // everything's finished, we save the final image
@@ -271,52 +306,139 @@ namespace ShapeScape
             // cleanup
             constructorCanvasCopyBuffer.Dispose();
             constructorCanvasBuffer.Dispose();
-            baseImageBuffer.Dispose();
+            BaseImageBuffer.Dispose();
         }
 
-        private static void SetupDisplay()
+        // TODO : Okay so we can't use Console at all in winforms (YOU ARE KIDDING ME)
+        // Sooooo we need to create the form for setting generation values, and modify the form that displays drawing progress to display other shit that was done in console.writeline()
+        public static void GetUserInput()
         {
+            // Select file first
+            do
+            {
+                Console.WriteLine("Enter the name of the file with extension");
+                Filename = Console.ReadLine();
+            } while (string.IsNullOrWhiteSpace(Filename));
 
+            // Applies to all entries after this
+            // TODO : Most of these user setting questions need to be inside do while loops so the user can make a mistake and try again, like how the filename is setup right now
+            Console.WriteLine("\n\n[ LEAVE BLANK FOR DEFAULT VALUES ]\n\n");
+
+            // Seed
+            int value;
+            Console.WriteLine($"Enter a seed:\n");
+            if (int.TryParse(Console.ReadLine(), out value))
+            {
+                seed = value;
+            }
+
+            // Total shape count
+            Console.WriteLine($"Set the total number of shapes in the result [Default = {TotalShapes}]\n");
+            if (int.TryParse(Console.ReadLine(), out value))
+            {
+                TotalShapes = value;
+            }
+
+            // Evolved shape population
+            Console.WriteLine($"Set the number of active shapes being evolved at once [Default = {ShapePopulation}]\n");
+            if (int.TryParse(Console.ReadLine(), out value))
+            {
+                TotalShapes = value;
+            }
+
+            // Survival threshold
+            Console.WriteLine($"Set the threshold for surviving a round of evolution [Default = {SurvivalThreshold}]\n");
+            if (int.TryParse(Console.ReadLine(), out value))
+            {
+                if (value < TotalShapes)
+                {
+                    TotalShapes = value;
+                }
+            }
+
+            // Evolution cycles
+            Console.WriteLine($"Set the amount of evolution cycles per shape [Default = {EvolutionCycles}]\n");
+            if (int.TryParse(Console.ReadLine(), out value))
+            {
+                EvolutionCycles = value;
+            }
+
+            // Mutation strength
+            Console.WriteLine($"Set the mutation strength factor [Default = {MutationStrength}]\n");
+            if (int.TryParse(Console.ReadLine(), out value))
+            {
+                MutationStrength = value;
+            }
+
+            // Palletise
+            Console.WriteLine($"Enable shape color pallettising? (Significant startup time) [Default = {Palletise}]\n [Y/N]\n");
+            string result = Console.ReadLine();
+            if (result is not null && result.ToUpper() == "Y")
+            {
+                Palletise = true;
+            }
+        }
+
+        public static Bitmap MapTexture(Rgba32[,] rgbaArray)
+        {
+            int width = rgbaArray.GetLength(1);   // X-axis
+            int height = rgbaArray.GetLength(0);  // Y-axis
+            Bitmap bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+
+            BitmapData bmpData = bitmap.LockBits(
+                new System.Drawing.Rectangle(0, 0, width, height),
+                ImageLockMode.WriteOnly,
+                PixelFormat.Format32bppArgb);
+
+            int stride = bmpData.Stride;
+            IntPtr ptr = bmpData.Scan0;
+            int bytes = stride * height;
+            byte[] pixelData = new byte[bytes];
+
+            for (int y = 0; y < height; y++)
+            {
+                int rowOffset = y * stride;
+                for (int x = 0; x < width; x++)
+                {
+                    Rgba32 rgba = rgbaArray[y, x]; // Swapped access: [y, x]
+
+                    int i = rowOffset + x * 4;
+                    pixelData[i + 0] = rgba.B;
+                    pixelData[i + 1] = rgba.G;
+                    pixelData[i + 2] = rgba.R;
+                    pixelData[i + 3] = rgba.A;
+                }
+            }
+
+            Marshal.Copy(pixelData, 0, ptr, bytes);
+            bitmap.UnlockBits(bmpData);
+            return bitmap;
         }
 
         /// <summary>
         /// Populates the shape array with random shapes
         /// </summary>
-        private static void Init(ref Polygon[] polygons)
+        private static void CreateShapes(ref BasePolygon[] polygons)
         {
             Console.WriteLine("Initalising shape arrays.");
             for (int i = 0; i < polygons.Length; i++)
             {
-                polygons[i] = CreateRandomShape();
-            }
-        }
-        private static Polygon CreateRandomShape()
-        {
-            int shapeType = rand.Next(2); // Adjust the number based on how many shape types you have
-            return shapeType switch
-            {
-                0 => new Rectangle(),
-                1 => new Rectangle(),
-                _ => throw new InvalidOperationException("Unexpected shape type")
-            };
-        }
-        public static T[][] Split2DArray<T>(T[,] input)
-        {
-
-            int width = input.GetLength(0);
-            T[][] result = new T[12][];
-
-            for (int i = 0; i < 12; i++)
-            {
-                result[i] = new T[width];
-                for (int j = 0; j < width; j++)
+                int shapeType = rand.Next(2);
+                switch (shapeType)
                 {
-                    result[i][j] = input[i, j];
+                    case 0:
+                        polygons[i] = new Rectangle();
+                        break;
+                    case 1:
+                        polygons[i] = new Triangle();
+                        break;
+                    default:
+                        Console.WriteLine($"Something went wrong creating shapes in {CreateShapes}");
+                        polygons[i] = new Triangle();
+                        break;
                 }
             }
-
-            return result;
         }
-
+        #endregion
     }
 }

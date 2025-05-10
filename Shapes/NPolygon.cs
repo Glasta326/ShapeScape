@@ -10,7 +10,7 @@ namespace ShapeScape.Shapes
     /// <summary>
     /// A shape with an arbirtary number of verticies, that do not connect via any rules
     /// </summary>
-    public class NPolygon : Polygon
+    public class NPolygon : BasePolygon
     {
         /// <summary>
         /// Limit on how many verticies an NPolygon can have
@@ -54,7 +54,7 @@ namespace ShapeScape.Shapes
         /// <summary>
         /// Creates more NPolygons based on this NPolygons with similar but different properties
         /// </summary>
-        public override void CreateChildren(int childcount, int mutationStrength, ref List<Polygon> polygons)
+        public override void CreateChildren(int childcount, int mutationStrength, ref List<BasePolygon> polygons)
         {
             for (int i = 0; i < childcount; i++)
             {

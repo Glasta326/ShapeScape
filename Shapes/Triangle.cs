@@ -13,7 +13,7 @@ namespace ShapeScape.Shapes
     /// <summary>
     /// Tessel class with three vertexes and a color. Final result of tesselation.
     /// </summary>
-    public class Triangle : Polygon
+    public class Triangle : BasePolygon
     {
         /// <summary>
         /// Default constructor, Assigns random verticies and color.
@@ -55,7 +55,7 @@ namespace ShapeScape.Shapes
         /// Creates more triangles based on this triangle with similar but different properties
         /// </summary>
         
-        public override void CreateChildren(int childcount, int mutationStrength, ref List<Polygon> polygons)
+        public override void CreateChildren(int childcount, int mutationStrength, ref List<BasePolygon> polygons)
         {
             for (int i = 0; i < childcount; i++)
             {

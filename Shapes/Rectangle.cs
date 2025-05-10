@@ -12,7 +12,7 @@ namespace ShapeScape.Shapes
     /// <summary>
     /// Rectangle class with a Topleft and Dimensions.
     /// </summary>
-    public class Rectangle : Polygon
+    public class Rectangle : BasePolygon
     {
         public float2 dimensions;
         /// <summary>
@@ -69,7 +69,7 @@ namespace ShapeScape.Shapes
         /// <summary>
         /// Creates more rectangles based on this rectangle with similar but different properties
         /// </summary>
-        public override void CreateChildren(int childcount, int mutationStrength, ref List<Polygon> polygons)
+        public override void CreateChildren(int childcount, int mutationStrength, ref List<BasePolygon> polygons)
         {
             for (int i = 0; i < childcount; i++)
             {
