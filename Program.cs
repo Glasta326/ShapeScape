@@ -45,7 +45,7 @@ namespace ShapeScape
         /// Total amount of shapes being evolved in each cycle <br/>
         /// Defaults to 500
         /// </summary>
-        public static int ShapePopulation = 500;
+        public static int ShapePopulation = 2500;
 
         /// <summary>
         /// How many times to cycle the shapes before selecting one to add to the canvas <br/>
@@ -143,7 +143,10 @@ namespace ShapeScape
         {
             // Set all generation settings
             GetUserInput();
-
+            if (Filename == "NOFILE") // They pressed x on the window
+            {
+                return;
+            }
             // Start the clock!
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -341,7 +344,15 @@ namespace ShapeScape
             {
                 if (form.ShowDialog() == DialogResult.OK)
                 {
-                    Filename = form.Filename;
+                    string t = form.Filename;
+                    if (t is null)
+                    {
+                        Filename = "NOFILE";
+                    }
+                    else
+                    {
+                        Filename = t;
+                    }
                     if (form.Seed.HasValue) Seed = form.Seed.Value;
                     if (form.DownscaleFactor.HasValue) DownscaleFactor = form.DownscaleFactor.Value;
                     if (form.TotalShapes.HasValue) TotalShapes = form.TotalShapes.Value;
@@ -352,7 +363,6 @@ namespace ShapeScape
                     Palletise = form.Palletise;
                 }
             }
-
         }
 
 

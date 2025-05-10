@@ -17,38 +17,54 @@
 
         private void InitializeComponent()
         {
+            // I'd love to make this static but keeping everything encased in this one instance class means i could re-use it if i added some way to change settings mid-generation
+            int y = 5;
+
             // Special buttons
             Label youCanLeaveBlankForDefault = new Label
             {
                 Left = 10,
-                Top = 5,
+                Top = y,
                 Text = "Leave boxes blank for default values",
                 ForeColor = Color.Green,
                 AutoSize = true
             };
             this.Controls.Add(youCanLeaveBlankForDefault);
+            y += 20;
+
+            Label theseAreTheDefaults = new Label
+            {
+                Left = 10,
+                Top = y,
+                Text = "Values in [] show default values",
+                ForeColor = Color.Green,
+                AutoSize = true
+            };
+            this.Controls.Add(theseAreTheDefaults);
+            y += 20;
+
             TxtFilename = new TextBox 
             { 
-                Left = 10, Top = 30, Width = 250 
+                Left = 10, Top = y, Width = 250 
             };
+            y += 0;
+
             FileBrowseButton = new Button 
             {
-                Left = 270, Top = 30, Text = "Browse..." 
+                Left = 270, Top = y, Text = "Browse..." 
             };
             FileBrowseButton.Click += OnClickBrowseFileButton;
+            y += 30;
 
-            // I'd love to make this static but keeping everything encased in this one instance class means i could re-use it if i added some way to change settings mid-generation
-            int y = 60;
+            SeedText = AddLabeledInput("Seed [Random]:", ref y);
+            ScaleText = AddLabeledInput("Downscale factor [20]:", ref y);
+            TotalShapesText = AddLabeledInput("Total Shapes [512]:", ref y);
+            ShapePopulationText = AddLabeledInput("Shape Population [2500]:", ref y);
+            SurvivalThresholdText = AddLabeledInput("Survival Threshold [50]:", ref y);
+            EvolutionCyclesText = AddLabeledInput("Evolution Cycles [6]:", ref y);
+            MutationStrengthText = AddLabeledInput("Mutation Strength [60]:", ref y);
 
-            SeedText = AddLabeledInput("Seed:", ref y);
-            ScaleText = AddLabeledInput("Downscale factor:", ref y);
-            TotalShapesText = AddLabeledInput("Total Shapes:", ref y);
-            ShapePopulationText = AddLabeledInput("Shape Population:", ref y);
-            SurvivalThresholdText = AddLabeledInput("Survival Threshold:", ref y);
-            EvolutionCyclesText = AddLabeledInput("Evolution Cycles:", ref y);
-            MutationStrengthText = AddLabeledInput("Mutation Strength:", ref y);
-
-            PalletiseBox = new CheckBox { Left = 10, Top = y, Text = "Enable Palletising (Heavy startup overhead!)", AutoSize = true };
+            PalletiseBox = new CheckBox { Left = 10, Top = y, Text = "Enable Palletising (Minor startup overhead)", AutoSize = true };
             y += 30;
 
             OkButton = new Button 
