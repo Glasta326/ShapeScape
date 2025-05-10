@@ -27,11 +27,11 @@ namespace ShapeScape.Utils
         /// Gets a float2 coordinate located on the canvas
         /// </summary>
         /// <param name="Tolerance">How much outside the canvas this position is allowed to deviate</param>
-        public static float2 RandomCanvasPosition(int Tolerance = 0)
+        public static float2 RandomCanvasPosition(float Tolerance = 0)
         {
             // the + 1 is because we want to be able to draw right on the boundry of the image, and .Next would return the maxDimension - 1 as an upper limit
-            int x = Program.rand.Next(-Tolerance, Program.Dimensions.X + 1 + Tolerance);
-            int y = Program.rand.Next(-Tolerance, Program.Dimensions.Y + 1 + Tolerance);
+            float x = Program.rand.NextFloat(-Tolerance, (float)Program.Dimensions.X + 1f + Tolerance);
+            float y = Program.rand.NextFloat(-Tolerance, (float)Program.Dimensions.Y + 1f + Tolerance);
             return new float2(x, y);
         }
 
@@ -42,6 +42,12 @@ namespace ShapeScape.Utils
         public static int Coinflip()
         {
             return Program.rand.Next(0, 2) == 1 ? 1 : -1;
+        }
+
+
+        public static float NextFloat(this Random random, float min, float max)
+        {
+            return (random.NextSingle() * (max - min)) + min;
         }
     }
 }

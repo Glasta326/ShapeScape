@@ -19,5 +19,13 @@ namespace ShapeScape.Utils
         {
             texture.Save(Path.Combine(WorkingDirectory, Filename));
         }
+
+        /// <summary>
+        /// Saves a texture to the correct folder automatically
+        /// </summary>
+        public static void SaveImage(this ReadOnlyTexture2D<Rgba32, float4> texture, string Filename)
+        {
+            texture.Save(Path.Combine(WorkingDirectory, Filename));
+        }
     }
 }

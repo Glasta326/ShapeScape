@@ -14,6 +14,7 @@ namespace ShapeScape.Forms
     {
         public string Filename { get; private set; }
         public int? Seed => TryParseNullable(SeedText.Text);
+        public int? DownscaleFactor => TryParseNullable(ScaleText.Text);
         public int? TotalShapes => TryParseNullable(TotalShapesText.Text);
         public int? ShapePopulation => TryParseNullable(ShapePopulationText.Text);
         public int? SurvivalThreshold => TryParseNullable(SurvivalThresholdText.Text);

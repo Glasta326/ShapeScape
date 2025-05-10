@@ -27,7 +27,7 @@ namespace ShapeScape
         /// Seed used to control <see cref="Program.rand"/>. <br/>
         /// Defaults to -1 (Random seed)
         /// </summary>
-        public static int seed = -1;
+        public static int Seed = -1;
 
         /// <summary>
         /// Name of the image file to be reconstructed.<br/>
@@ -51,7 +51,7 @@ namespace ShapeScape
         /// How many times to cycle the shapes before selecting one to add to the canvas <br/>
         /// Defaults to 10
         /// </summary>
-        public static int EvolutionCycles = 2;
+        public static int EvolutionCycles = 6;
 
         /// <summary>
         /// The shapes with the <see cref="SurvivalThreshold"/> lowest scores survive, the rest all die
@@ -65,9 +65,16 @@ namespace ShapeScape
         public static int MutationStrength = 60;
 
         /// <summary>
-        /// Whether to initalise <see cref="PalletteCache"/> and use Pallette based colors when generating shapes
+        /// Whether to initalise <see cref="PalletteCache"/> and use Pallette based colors when generating shapes <br/>
+        /// Defaults to false
         /// </summary>
         public static bool Palletise = false;
+
+        /// <summary>
+        /// Factor to downscale <see cref="BaseImageBuffer"/> by before generation <br/>
+        /// Defaults to 20
+        /// </summary>
+        public static float DownscaleFactor = 20f;
 
         #endregion
 
@@ -125,10 +132,7 @@ namespace ShapeScape
         /// This comes from NPolygon having a max vertex count of 8, and applying the formula 2N - 4 to calculate tessel count from vertices
         /// </summary>
         public const int MAX_TESSELS = 12;
-
-        public const float scaleFactor = 10f;
-
-        public static int2 ScaledDimensions => new int2((int)(Dimensions.X * scaleFactor), (int)(Dimensions.Y * scaleFactor));
+        public static int2 ScaledDimensions => new int2((int)(Dimensions.X * DownscaleFactor), (int)(Dimensions.Y * DownscaleFactor));
 
         #endregion
 
@@ -143,13 +147,9 @@ namespace ShapeScape
             // Start the clock!
             Stopwatch sw = Stopwatch.StartNew();
 
-            // Load the target image into memory
+            // Load the target image into memory and downscale it
             BaseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
-
-            if (Dimensions.X > 9999 || Dimensions.Y > 9999)
-            {
-                throw new Exception("Image dimensions must be less than 9999 x 9999");
-            }
+            BaseImageBuffer = GraphicsDevice.GetDefault().AllocateReadOnlyTexture2D<Rgba32, float4>(BitmapUtils.Downscale(BaseImageBuffer.ToArray(), (int)DownscaleFactor));
 
             // Bring this up before potential pallettisation so the user knows the program is working
             ResultMap = new Bitmap(ScaledDimensions.X, ScaledDimensions.Y);
@@ -295,24 +295,25 @@ namespace ShapeScape
                 GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.DrawToTexture(constructorCanvasBuffer, _tesselationBuffer));
                 _tesselationBuffer.Dispose();
 
+                // Re-scale the verticies to the correct size
                 Tessel[] clone = (Tessel[])tesselWinner.Clone();
                 for (int a = 0; a < clone.Length; a++)
                 {
-                    clone[a].v0 = new float2(clone[a].v0.X * scaleFactor, clone[a].v0.Y * scaleFactor);
-                    clone[a].v1 = new float2(clone[a].v1.X * scaleFactor, clone[a].v1.Y * scaleFactor);
-                    clone[a].v2 = new float2(clone[a].v2.X * scaleFactor, clone[a].v2.Y * scaleFactor);
+                    clone[a].v0 = new float2(clone[a].v0.X * DownscaleFactor, clone[a].v0.Y * DownscaleFactor);
+                    clone[a].v1 = new float2(clone[a].v1.X * DownscaleFactor, clone[a].v1.Y * DownscaleFactor);
+                    clone[a].v2 = new float2(clone[a].v2.X * DownscaleFactor, clone[a].v2.Y * DownscaleFactor);
                 }
                 using var cloneBuffer = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(clone);
                 GraphicsDevice.GetDefault().For(ScaledDimensions.X, ScaledDimensions.Y, new Shaders.DrawToTexture(outputBuffer, cloneBuffer));
 
-                // This is relativley performance costly sometimes so dont do it everrryyy update
+                // This is relativley performance costly so dont do it every update
                 if (i % 2 == 0)
                 {
-                    ResultMap = MapTexture(outputBuffer.ToArray());
+                    ResultMap = outputBuffer.ToArray().ToBitmap();
                     ImageRenderer.Update(ResultMap);
                 }
-                // just to keep progress
-                if (i % 50 == 0)
+                // Arguably more costly so do it less often
+                if (i % 15 == 0)
                 {
                     outputBuffer.SaveImage("Progress.png");
                 }
@@ -341,7 +342,8 @@ namespace ShapeScape
                 if (form.ShowDialog() == DialogResult.OK)
                 {
                     Filename = form.Filename;
-                    if (form.Seed.HasValue) seed = form.Seed.Value;
+                    if (form.Seed.HasValue) Seed = form.Seed.Value;
+                    if (form.DownscaleFactor.HasValue) DownscaleFactor = form.DownscaleFactor.Value;
                     if (form.TotalShapes.HasValue) TotalShapes = form.TotalShapes.Value;
                     if (form.ShapePopulation.HasValue) ShapePopulation = form.ShapePopulation.Value;
                     if (form.SurvivalThreshold.HasValue) SurvivalThreshold = form.SurvivalThreshold.Value;
@@ -353,41 +355,7 @@ namespace ShapeScape
 
         }
 
-        public static Bitmap MapTexture(Rgba32[,] rgbaArray)
-        {
-            int width = rgbaArray.GetLength(1);   // X-axis
-            int height = rgbaArray.GetLength(0);  // Y-axis
-            Bitmap bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
 
-            BitmapData bmpData = bitmap.LockBits(
-                new System.Drawing.Rectangle(0, 0, width, height),
-                ImageLockMode.WriteOnly,
-                PixelFormat.Format32bppArgb);
-
-            int stride = bmpData.Stride;
-            IntPtr ptr = bmpData.Scan0;
-            int bytes = stride * height;
-            byte[] pixelData = new byte[bytes];
-
-            for (int y = 0; y < height; y++)
-            {
-                int rowOffset = y * stride;
-                for (int x = 0; x < width; x++)
-                {
-                    Rgba32 rgba = rgbaArray[y, x]; // Swapped access: [y, x]
-
-                    int i = rowOffset + x * 4;
-                    pixelData[i + 0] = rgba.B;
-                    pixelData[i + 1] = rgba.G;
-                    pixelData[i + 2] = rgba.R;
-                    pixelData[i + 3] = rgba.A;
-                }
-            }
-
-            Marshal.Copy(pixelData, 0, ptr, bytes);
-            bitmap.UnlockBits(bmpData);
-            return bitmap;
-        }
 
         /// <summary>
         /// Populates the shape array with random shapes
@@ -401,10 +369,10 @@ namespace ShapeScape
                 switch (shapeType)
                 {
                     case 0:
-                        polygons[i] = new Triangle();
+                        polygons[i] = new Rectangle();
                         break;
                     case 1:
-                        polygons[i] = new Rectangle();
+                        polygons[i] = new Triangle();
                         break;
                     default:
                         Console.WriteLine($"Something went wrong creating shapes in {CreateShapes}");

@@ -27,9 +27,14 @@ namespace ShapeScape.Shapes
             // Set the position this rectangle is drawn relative to
             topLeft = RandomUtils.RandomCanvasPosition();
             // The rectangle can have width or height ranging half the size of the canvas each way
-            float2 dimensions = new float2(
-                Program.rand.Next((int)(-Program.Dimensions.X / 2f), (int)(Program.Dimensions.X / 2f)),
-                Program.rand.Next((int)(-Program.Dimensions.Y / 2f), (int)(Program.Dimensions.Y / 2f)));
+            dimensions = new float2(
+                Program.rand.NextFloat(-Program.Dimensions.X / 2f, Program.Dimensions.X / 2f),
+                Program.rand.NextFloat(-Program.Dimensions.Y / 2f, Program.Dimensions.Y / 2f)
+            );
+
+
+
+
 
             // This vertex order makes more sense for triangulating
             this.Verticies[1] = new float2(topLeft.X + 0, topLeft.Y + dimensions.Y); // Bottom left
@@ -40,7 +45,6 @@ namespace ShapeScape.Shapes
             this.Tesselation = new Tessel[2];
             Tesselation[0] = new Tessel(this.Verticies[0], this.Verticies[1], this.Verticies[2], this.Color);
             Tesselation[1] = new Tessel(this.Verticies[1], this.Verticies[2], this.Verticies[3], this.Color);
-
         }
 
         /// <summary>
@@ -102,7 +106,7 @@ namespace ShapeScape.Shapes
                         colorGenes.W += diff;
                         break;
                 }
-                
+
 
                 polygons.Add(new Rectangle(topLeftGenes, dimGenes, colorGenes));
             }

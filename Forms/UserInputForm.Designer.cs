@@ -6,6 +6,7 @@
         private TextBox TxtFilename;
         private Button FileBrowseButton;
         private TextBox SeedText;
+        private TextBox ScaleText;
         private TextBox TotalShapesText;
         private TextBox ShapePopulationText;
         private TextBox SurvivalThresholdText;
@@ -40,7 +41,7 @@
             int y = 60;
 
             SeedText = AddLabeledInput("Seed:", ref y);
-            
+            ScaleText = AddLabeledInput("Downscale factor:", ref y);
             TotalShapesText = AddLabeledInput("Total Shapes:", ref y);
             ShapePopulationText = AddLabeledInput("Shape Population:", ref y);
             SurvivalThresholdText = AddLabeledInput("Survival Threshold:", ref y);
