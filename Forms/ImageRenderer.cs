@@ -20,8 +20,8 @@ namespace ShapeScape.Rendering
             this.Text = "Image Render";
 
             // Imagerenderer is only instanciated after this is defined so this is safe
-            this.Width = Program.Dimensions.X;
-            this.Height = Program.Dimensions.Y;
+            this.Width = Program.ScaledDimensions.X;
+            this.Height = Program.ScaledDimensions.Y;
 
             // Picture display
             _PictureBox = new PictureBox

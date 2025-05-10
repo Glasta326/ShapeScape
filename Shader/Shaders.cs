@@ -70,13 +70,13 @@ namespace ShapeScape.Shader.Shaders
         }
 
         /// <summary>
-        /// Draws a given tesselation onto the constructor canvas for usage in the next evolution cycle
+        /// Draws a given tesselation onto the provided canvas for usage in the next evolution cycle
         /// </summary>
-        /// <param name="constructorImage">The canvas that shapes are drawn onto to make progress</param>
+        /// <param name="texture">The canvas that shapes are drawn onto to make progress</param>
         /// <param name="tesselation">The provided tessels that make up the polygon we are drawing</param>
         [ThreadGroupSize(DefaultThreadGroupSizes.XY)]
         [GeneratedComputeShaderDescriptor]
-        public readonly partial struct DrawToConstructor(ReadWriteTexture2D<Rgba32, float4> constructorImage, ReadOnlyBuffer<Tessel> tesselation) : IComputeShader
+        public readonly partial struct DrawToTexture(ReadWriteTexture2D<Rgba32, float4> texture, ReadOnlyBuffer<Tessel> tesselation) : IComputeShader
         {
             public void Execute()
             {
@@ -88,14 +88,14 @@ namespace ShapeScape.Shader.Shaders
                     Tessel t = tesselation[i];
                     if (IsPointInTriangle(new float2(x, y), t.v0, t.v1, t.v2))
                     {
-                        float4 destColor = constructorImage[x, y].RGBA;
+                        float4 destColor = texture[x, y].RGBA;
 
                         float r = (t.color.R * t.color.A) + (destColor.R * (1 - t.color.A));
                         float g = (t.color.G * t.color.A) + (destColor.G * (1 - t.color.A));
                         float b = (t.color.B * t.color.A) + (destColor.B * (1 - t.color.A));
                         float a = t.color.A + (destColor.A * (1 - t.color.A));
 
-                        constructorImage[x, y].RGBA = new float4(r, g, b, a);
+                        texture[x, y].RGBA = new float4(r, g, b, a);
                     }
                 }
             }
@@ -164,7 +164,7 @@ namespace ShapeScape.Shader.Shaders
             ReadOnlyBuffer<Tessel> t9,
             ReadOnlyBuffer<Tessel> t10,
             ReadOnlyBuffer<Tessel> t11,
-            ReadOnlyTexture2D<Rgba32, float4> baseImage, ReadWriteTexture2D<Rgba32, float4> constructorImage, ReadWriteTexture2D<Rgba32, float4> constructorCopy, ReadWriteBuffer<float> scores) : IComputeShader
+            ReadOnlyTexture2D<Rgba32, float4> baseImage, ReadWriteTexture2D<Rgba32, float4> constructorImage, ReadWriteBuffer<float> scores) : IComputeShader
         {
             
             public void Execute()
@@ -192,14 +192,19 @@ namespace ShapeScape.Shader.Shaders
                 {
                     for (int j = 0; j < constructorImage.Height; j++)
                     {
+                        // Calculate RGBA color of the pixel on the constructor image would be if we drew this color to it
+                        // (Color blending)
                         float4 destColor = constructorImage[i, j];
-                        float4 Pixel = constructorImage[i, j];
-
-                        // Figure out what color this pixel should be if we were to draw to it
                         float r = (tessel0.color.R * tessel0.color.A) + (destColor.R * (1 - tessel0.color.A));
                         float g = (tessel0.color.G * tessel0.color.A) + (destColor.G * (1 - tessel0.color.A));
                         float b = (tessel0.color.B * tessel0.color.A) + (destColor.B * (1 - tessel0.color.A));
                         float a = tessel0.color.A + (destColor.A * (1 - tessel0.color.A));
+
+
+
+                        // Default value is the color of the pixel on the constructor image.
+                        // If this pixel is outside any of the tessels, then we don't draw to it, so the color remains unchanged
+                        float4 Pixel = constructorImage[i, j];
 
                         // If this pixel is inside any of the tessels that compose this shape, that means the pixel is inside our shape bounds and we need to "draw it on the canvas"
                         // Even though we dont actually bother drawing to the canvas because there's no point in doing so

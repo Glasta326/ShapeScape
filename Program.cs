@@ -126,6 +126,10 @@ namespace ShapeScape
         /// </summary>
         public const int MAX_TESSELS = 12;
 
+        public const float scaleFactor = 10f;
+
+        public static int2 ScaledDimensions => new int2((int)(Dimensions.X * scaleFactor), (int)(Dimensions.Y * scaleFactor));
+
         #endregion
 
 
@@ -148,16 +152,16 @@ namespace ShapeScape
             }
 
             // Bring this up before potential pallettisation so the user knows the program is working
-            ResultMap = new Bitmap(Dimensions.X, Dimensions.Y);
+            ResultMap = new Bitmap(ScaledDimensions.X, ScaledDimensions.Y);
             ImageRenderer.Update(ResultMap);
             if (Palletise)
             {
                 PalletteCache.CreatePallette();
             }
 
-            // Create both canvases
+            // Create canvas
             using var constructorCanvasBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(Dimensions.X, Dimensions.Y);
-            using var constructorCanvasCopyBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(Dimensions.X, Dimensions.Y);
+            using var outputBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(ScaledDimensions.X, ScaledDimensions.Y);
 
             // Create score array so it can be re-used constantly
             float[] score = new float[ShapePopulation];
@@ -204,6 +208,7 @@ namespace ShapeScape
 
             // Fill canvas with blank color before we start
             GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer, PalletteCache.MostCommonColor()));
+            GraphicsDevice.GetDefault().For(ScaledDimensions.X, ScaledDimensions.Y, new Shaders.FillColor(outputBuffer, PalletteCache.MostCommonColor()));
 
             // Main loop - Every cycle of this, one shape is added to the final image
             for (int i = 0; i < TotalShapes; i++)
@@ -247,7 +252,7 @@ namespace ShapeScape
                     // Run shader
                     GraphicsDevice.GetDefault().For(ShapePopulation, new Shaders.ScoreAllShapes(
                     t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12,
-                    BaseImageBuffer, constructorCanvasBuffer, constructorCanvasCopyBuffer, scoreBuffer));
+                    BaseImageBuffer, constructorCanvasBuffer, scoreBuffer));
                     scoreBuffer.CopyTo(score);
 
                     // Sort both of the arrays at once
@@ -284,23 +289,32 @@ namespace ShapeScape
                 // polygons remain sorted at the end of final evolution cycle, select best one and draw it to the canvas.
                 BasePolygon winner = polygons[0];
                 
-                // Technicallyyyy we are re-tesselating this polygon again but the data for that is jumbled across the buffer sandwich  so this is significantly more convienent.
-                // Performance doesn't really matter outside of the evo loop anyway
+                // Modify the constructor canvas and draw the winning shape to it
                 Tessel[] tesselWinner = Tesselator.TessellatePolygon(winner);
                 using var _tesselationBuffer = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(tesselWinner);
-                GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.DrawToConstructor(constructorCanvasBuffer, _tesselationBuffer));
+                GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.DrawToTexture(constructorCanvasBuffer, _tesselationBuffer));
                 _tesselationBuffer.Dispose();
+
+                Tessel[] clone = (Tessel[])tesselWinner.Clone();
+                for (int a = 0; a < clone.Length; a++)
+                {
+                    clone[a].v0 = new float2(clone[a].v0.X * scaleFactor, clone[a].v0.Y * scaleFactor);
+                    clone[a].v1 = new float2(clone[a].v1.X * scaleFactor, clone[a].v1.Y * scaleFactor);
+                    clone[a].v2 = new float2(clone[a].v2.X * scaleFactor, clone[a].v2.Y * scaleFactor);
+                }
+                using var cloneBuffer = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(clone);
+                GraphicsDevice.GetDefault().For(ScaledDimensions.X, ScaledDimensions.Y, new Shaders.DrawToTexture(outputBuffer, cloneBuffer));
 
                 // This is relativley performance costly sometimes so dont do it everrryyy update
                 if (i % 2 == 0)
                 {
-                    ResultMap = MapTexture(constructorCanvasBuffer.ToArray());
+                    ResultMap = MapTexture(outputBuffer.ToArray());
                     ImageRenderer.Update(ResultMap);
                 }
                 // just to keep progress
                 if (i % 50 == 0)
                 {
-                    constructorCanvasBuffer.SaveImage("Progress.png");
+                    outputBuffer.SaveImage("Progress.png");
                 }
                 
                 sw.Stop();
@@ -308,10 +322,9 @@ namespace ShapeScape
                 sw.Restart();
             }
             // everything's finished, we save the final image
-            constructorCanvasBuffer.SaveImage("Result.png");
+            outputBuffer.SaveImage("Result.png");
 
             // cleanup
-            constructorCanvasCopyBuffer.Dispose();
             constructorCanvasBuffer.Dispose();
             BaseImageBuffer.Dispose();
         }
@@ -388,10 +401,10 @@ namespace ShapeScape
                 switch (shapeType)
                 {
                     case 0:
-                        polygons[i] = new Rectangle();
+                        polygons[i] = new Triangle();
                         break;
                     case 1:
-                        polygons[i] = new Triangle();
+                        polygons[i] = new Rectangle();
                         break;
                     default:
                         Console.WriteLine($"Something went wrong creating shapes in {CreateShapes}");
