@@ -1,4 +1,5 @@
 ﻿using ComputeSharp;
+using ShapeScape.Forms;
 using ShapeScape.ImageCache;
 using ShapeScape.Rendering;
 using ShapeScape.Shader;
@@ -133,20 +134,21 @@ namespace ShapeScape
         static void Main(string[] args)
         {
             // Set all generation settings
-            //GetUserInput();
-
-            Filename = "SolverLogo.png";
+            GetUserInput();
 
             // Start the clock!
             Stopwatch sw = Stopwatch.StartNew();
 
             // Load the target image into memory
             BaseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
+
+            // Bring this up before potential pallettisation so the user knows the program is working
+            ResultMap = new Bitmap(Dimensions.X, Dimensions.Y);
+            ImageRenderer.Update(ResultMap);
             if (Palletise)
             {
                 PalletteCache.CreatePallette();
             }
-            ResultMap = new Bitmap(Dimensions.X, Dimensions.Y);
 
             // Create both canvases
             using var constructorCanvasBuffer = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Rgba32, float4>(Dimensions.X, Dimensions.Y);
@@ -284,7 +286,7 @@ namespace ShapeScape
                 GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.DrawToConstructor(constructorCanvasBuffer, _tesselationBuffer));
                 _tesselationBuffer.Dispose();
 
-                
+                // This is relativley performance costly sometimes so dont do it everrryyy update
                 if (i % 2 == 0)
                 {
                     ResultMap = MapTexture(constructorCanvasBuffer.ToArray());
@@ -313,70 +315,24 @@ namespace ShapeScape
         // Sooooo we need to create the form for setting generation values, and modify the form that displays drawing progress to display other shit that was done in console.writeline()
         public static void GetUserInput()
         {
-            // Select file first
-            do
-            {
-                Console.WriteLine("Enter the name of the file with extension");
-                Filename = Console.ReadLine();
-            } while (string.IsNullOrWhiteSpace(Filename));
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
 
-            // Applies to all entries after this
-            // TODO : Most of these user setting questions need to be inside do while loops so the user can make a mistake and try again, like how the filename is setup right now
-            Console.WriteLine("\n\n[ LEAVE BLANK FOR DEFAULT VALUES ]\n\n");
-
-            // Seed
-            int value;
-            Console.WriteLine($"Enter a seed:\n");
-            if (int.TryParse(Console.ReadLine(), out value))
+            using (UserInputForm form = new UserInputForm())
             {
-                seed = value;
-            }
-
-            // Total shape count
-            Console.WriteLine($"Set the total number of shapes in the result [Default = {TotalShapes}]\n");
-            if (int.TryParse(Console.ReadLine(), out value))
-            {
-                TotalShapes = value;
-            }
-
-            // Evolved shape population
-            Console.WriteLine($"Set the number of active shapes being evolved at once [Default = {ShapePopulation}]\n");
-            if (int.TryParse(Console.ReadLine(), out value))
-            {
-                TotalShapes = value;
-            }
-
-            // Survival threshold
-            Console.WriteLine($"Set the threshold for surviving a round of evolution [Default = {SurvivalThreshold}]\n");
-            if (int.TryParse(Console.ReadLine(), out value))
-            {
-                if (value < TotalShapes)
+                if (form.ShowDialog() == DialogResult.OK)
                 {
-                    TotalShapes = value;
+                    Filename = form.Filename;
+                    if (form.Seed.HasValue) seed = form.Seed.Value;
+                    if (form.TotalShapes.HasValue) TotalShapes = form.TotalShapes.Value;
+                    if (form.ShapePopulation.HasValue) ShapePopulation = form.ShapePopulation.Value;
+                    if (form.SurvivalThreshold.HasValue) SurvivalThreshold = form.SurvivalThreshold.Value;
+                    if (form.EvolutionCycles.HasValue) EvolutionCycles = form.EvolutionCycles.Value;
+                    if (form.MutationStrength.HasValue) MutationStrength = form.MutationStrength.Value;
+                    Palletise = form.Palletise;
                 }
             }
 
-            // Evolution cycles
-            Console.WriteLine($"Set the amount of evolution cycles per shape [Default = {EvolutionCycles}]\n");
-            if (int.TryParse(Console.ReadLine(), out value))
-            {
-                EvolutionCycles = value;
-            }
-
-            // Mutation strength
-            Console.WriteLine($"Set the mutation strength factor [Default = {MutationStrength}]\n");
-            if (int.TryParse(Console.ReadLine(), out value))
-            {
-                MutationStrength = value;
-            }
-
-            // Palletise
-            Console.WriteLine($"Enable shape color pallettising? (Significant startup time) [Default = {Palletise}]\n [Y/N]\n");
-            string result = Console.ReadLine();
-            if (result is not null && result.ToUpper() == "Y")
-            {
-                Palletise = true;
-            }
         }
 
         public static Bitmap MapTexture(Rgba32[,] rgbaArray)

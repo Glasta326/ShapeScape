@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace ShapeScape.Rendering
 {
@@ -11,23 +12,23 @@ namespace ShapeScape.Rendering
     /// </summary>
     public class ImageRenderer : Form
     {
-        private static ImageRenderer Instance;
+        public static ImageRenderer Instance;
         private PictureBox _PictureBox; // "PictureBox" overlaps with the type name so good enough
 
         private ImageRenderer()
         {
             this.Text = "Image Render";
 
-            // Not too big, not too small 
-            this.Width = 800;
-            this.Height = 600;
+            // Imagerenderer is only instanciated after this is defined so this is safe
+            this.Width = Program.Dimensions.X;
+            this.Height = Program.Dimensions.Y;
 
+            // Picture display
             _PictureBox = new PictureBox
             {
                 Dock = DockStyle.Fill,
                 SizeMode = PictureBoxSizeMode.Zoom
             };
-
             this.Controls.Add(_PictureBox);
 
             // Reset instance when form iwndow gets closed
