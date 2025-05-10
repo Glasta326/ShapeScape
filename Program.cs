@@ -142,6 +142,11 @@ namespace ShapeScape
             // Load the target image into memory
             BaseImageBuffer = GraphicsDevice.GetDefault().LoadReadOnlyTexture2D<Rgba32, float4>(ImagePath);
 
+            if (Dimensions.X > 9999 || Dimensions.Y > 9999)
+            {
+                throw new Exception("Image dimensions must be less than 9999 x 9999");
+            }
+
             // Bring this up before potential pallettisation so the user knows the program is working
             ResultMap = new Bitmap(Dimensions.X, Dimensions.Y);
             ImageRenderer.Update(ResultMap);
