@@ -96,11 +96,6 @@ namespace ShapeScape
         /// </summary>
         public static string ImagePath => Path.Combine(FileUtils.WorkingDirectory, Filename);
 
-        /// <summary>
-        /// True dimensions of the output image as <see cref="BaseImageBuffer"/> is reduced in size drastically
-        /// </summary>
-        public static int2 ScaledDimensions => new int2((int)(Dimensions.X * DownscaleFactor), (int)(Dimensions.Y * DownscaleFactor));
-
         // Techinically this should be grouped into <see cref="RandomUtils"/> because it would make more sense there, but i'm very used to MainClass.rand.Next() calls
         /// <summary>
         /// Random class shared program-wide. <br/>
@@ -137,6 +132,7 @@ namespace ShapeScape
         /// This comes from NPolygon having a max vertex count of 8, and applying the formula 2N - 4 to calculate tessel count from vertices
         /// </summary>
         public const int MAX_TESSELS = 12;
+        public static int2 ScaledDimensions => new int2((int)(Dimensions.X * DownscaleFactor), (int)(Dimensions.Y * DownscaleFactor));
 
         #endregion
 
@@ -383,10 +379,10 @@ namespace ShapeScape
                 switch (shapeType)
                 {
                     case 0:
-                        polygons[i] = new Triangle();
+                        polygons[i] = new Rectangle();
                         break;
                     case 1:
-                        polygons[i] = new Rectangle();
+                        polygons[i] = new Triangle();
                         break;
                     default:
                         Console.WriteLine($"Something went wrong creating shapes in {CreateShapes}");
