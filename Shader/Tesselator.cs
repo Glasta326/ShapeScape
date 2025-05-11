@@ -26,29 +26,34 @@ namespace ShapeScape.Shader
             {
                 return r.Tesselation;
             }
+            // NPolygon is broken right now and it's actually faster to pre-compute tesselations anyway so currently the tesselator is unused
 
-            List<Tessel> result = new List<Tessel>();
-
-            float2[] verticies = shape.Verticies;
-
-            // Convert Float2 points to Float2Vertex objects
-            var vertices = verticies.Select(p => new Float2Vertex(p)).ToArray();
-
-
-            // Perform Delaunay triangulation
-            var triangulation = DelaunayTriangulation<Float2Vertex, Float2Cell>.Create(vertices, 2);
-            // Print triangles
-            int i = 0;
-            foreach (var triangle in triangulation.Cells)
+            else
             {
-                var v0 = triangle.Vertices[0].Point;
-                var v1 = triangle.Vertices[1].Point;
-                var v2 = triangle.Vertices[2].Point;
-                result.Add(new Tessel(v0, v1, v2, shape.Color));
+                List<Tessel> result = new List<Tessel>();
 
-                i++;
+                float2[] verticies = shape.Verticies;
+
+                // Convert Float2 points to Float2Vertex objects
+                var vertices = verticies.Select(p => new Float2Vertex(p)).ToArray();
+
+
+                // Perform Delaunay triangulation
+                var triangulation = DelaunayTriangulation<Float2Vertex, Float2Cell>.Create(vertices, 2);
+                // Print triangles
+                int i = 0;
+                foreach (var triangle in triangulation.Cells)
+                {
+                    var v0 = triangle.Vertices[0].Point;
+                    var v1 = triangle.Vertices[1].Point;
+                    var v2 = triangle.Vertices[2].Point;
+                    result.Add(new Tessel(v0, v1, v2, shape.Color));
+
+                    i++;
+                }
+                return result.ToArray();
             }
-            return result.ToArray();
+
         }
 
         // Triangle cell representation

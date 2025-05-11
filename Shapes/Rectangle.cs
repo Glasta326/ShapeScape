@@ -34,7 +34,7 @@ namespace ShapeScape.Shapes
 
 
 
-
+            
 
             // This vertex order makes more sense for triangulating
             this.Verticies[1] = new float2(topLeft.X + 0, topLeft.Y + dimensions.Y); // Bottom left
@@ -58,6 +58,8 @@ namespace ShapeScape.Shapes
 
             this.topLeft = new float2(TopLeft.X, TopLeft.Y);
             this.dimensions = new float2(Dimensions.X, Dimensions.Y);
+
+            // Re-do tesselation after getting created by our parent as mutation only effects verticies
 
             // This vertex order makes more sense for triangulating
             this.Verticies[1] = new float2(topLeft.X + 0, topLeft.Y + dimensions.Y); // Bottom left
