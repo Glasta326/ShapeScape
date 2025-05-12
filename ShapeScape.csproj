@@ -24,13 +24,6 @@
     <PackageReference Include="ComputeSharp" Version="3.1.0" />
     <PackageReference Include="ComputeSharp.Core" Version="3.1.0" />
     <PackageReference Include="MIConvexHull" Version="1.1.19.1019" />
-    <PackageReference Include="OpenTK" Version="4.9.4" />
-    <PackageReference Include="OpenTK.Graphics" Version="4.9.4" />
-    <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />
-    <PackageReference Include="OpenTK.Windowing.Common" Version="4.9.4" />
-    <PackageReference Include="OpenTK.Windowing.Desktop" Version="4.9.4" />
-    <PackageReference Include="SkiaSharp" Version="3.119.0" />
-    <PackageReference Include="SkiaSharp.Views" Version="3.119.0" />
   </ItemGroup>
 
   <ItemGroup>

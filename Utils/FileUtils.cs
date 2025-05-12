@@ -8,7 +8,13 @@ namespace ShapeScape.Utils
         /// <summary>
         /// The working directory all files are read from and output to
         /// </summary>
-        public static string WorkingDirectory = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).Parent.Parent.FullName, "WorkingDirectory");
+        public static string WorkingDirectory => getWorkingDirectory();
+
+
+        private static string getWorkingDirectory()
+        {
+            return Directory.GetCurrentDirectory();
+        }
 
 
 

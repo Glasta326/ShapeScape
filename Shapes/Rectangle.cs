@@ -32,10 +32,6 @@ namespace ShapeScape.Shapes
                 Program.rand.NextFloat(-Program.Dimensions.Y / 2f, Program.Dimensions.Y / 2f)
             );
 
-
-
-            
-
             // This vertex order makes more sense for triangulating
             this.Verticies[1] = new float2(topLeft.X + 0, topLeft.Y + dimensions.Y); // Bottom left
             this.Verticies[2] = new float2(topLeft.X + dimensions.X, topLeft.Y + 0); // Top right
