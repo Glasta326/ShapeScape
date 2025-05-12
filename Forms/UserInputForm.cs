@@ -51,7 +51,9 @@ namespace ShapeScape.Forms
             Close();
         }
 
-        // Safe version
+        /// <summary>
+        /// <see cref="int.TryParse(string?, out int)"/> but able to return null values used for default settings
+        /// </summary>
         private int? TryParseNullable(string input)
         {
             if (int.TryParse(input, out int val))
