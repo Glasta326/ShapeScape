@@ -14,13 +14,18 @@ namespace ShapeScape.Utils
         /// </summary>
         public static float4 RandomColor()
         {
-            float4 value = new float4((float)Program.rand.NextDouble(),
+            if (PalletteCache.Active)
+            {
+                return PalletteCache.PalletteColor();
+            }
+            else
+            {
+                float4 value = new float4((float)Program.rand.NextDouble(),
                 (float)Program.rand.NextDouble(),
                 (float)Program.rand.NextDouble(),
                 (float)Program.rand.NextDouble());
-            return value;
-            
-            //return PalletteCache.RandomColor();
+                return value;
+            }
         }
 
         /// <summary>

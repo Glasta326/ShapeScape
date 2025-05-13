@@ -154,16 +154,16 @@ namespace ShapeScape.Shader.Shaders
             // Hate. 
             ReadOnlyBuffer<Tessel> t0 ,
             ReadOnlyBuffer<Tessel> t1,
-            ReadOnlyBuffer<Tessel> t2,
-            ReadOnlyBuffer<Tessel> t3,
-            ReadOnlyBuffer<Tessel> t4,
-            ReadOnlyBuffer<Tessel> t5,
-            ReadOnlyBuffer<Tessel> t6,
-            ReadOnlyBuffer<Tessel> t7,
-            ReadOnlyBuffer<Tessel> t8,
-            ReadOnlyBuffer<Tessel> t9,
-            ReadOnlyBuffer<Tessel> t10,
-            ReadOnlyBuffer<Tessel> t11,
+            //ReadOnlyBuffer<Tessel> t2,
+            //ReadOnlyBuffer<Tessel> t3,
+            //ReadOnlyBuffer<Tessel> t4,
+            //ReadOnlyBuffer<Tessel> t5,
+            //ReadOnlyBuffer<Tessel> t6,
+            //ReadOnlyBuffer<Tessel> t7,
+            //ReadOnlyBuffer<Tessel> t8,
+            //ReadOnlyBuffer<Tessel> t9,
+            //ReadOnlyBuffer<Tessel> t10,
+            //ReadOnlyBuffer<Tessel> t11,
             ReadOnlyTexture2D<Rgba32, float4> baseImage, ReadWriteTexture2D<Rgba32, float4> constructorImage, ReadWriteBuffer<float> scores) : IComputeShader
         {
             
@@ -174,16 +174,16 @@ namespace ShapeScape.Shader.Shaders
 
                 Tessel tessel0 = t0[x];
                 Tessel tessel1 = t1[x];
-                Tessel tessel2 = t2[x];
-                Tessel tessel3 = t3[x];
-                Tessel tessel4 = t4[x];
-                Tessel tessel5 = t5[x];
-                Tessel tessel6 = t6[x];
-                Tessel tessel7 = t7[x];
-                Tessel tessel8 = t8[x];
-                Tessel tessel9 = t9[x];
-                Tessel tessel10 = t10[x];
-                Tessel tessel11 = t11[x];
+                //Tessel tessel2 = t2[x];
+                //Tessel tessel3 = t3[x];
+                //Tessel tessel4 = t4[x];
+                //Tessel tessel5 = t5[x];
+                //Tessel tessel6 = t6[x];
+                //Tessel tessel7 = t7[x];
+                //Tessel tessel8 = t8[x];
+                //Tessel tessel9 = t9[x];
+                //Tessel tessel10 = t10[x];
+                //Tessel tessel11 = t11[x];
                 // all tessels should be same color
 
                 float scoreSum = 0f;
@@ -216,6 +216,7 @@ namespace ShapeScape.Shader.Shaders
                         {
                             Pixel = new float4(r, g, b, a);
                         }
+                        /*
                         if (IsPointInTriangle(tessel2, new float2(i, j)) && tessel2.nothing.M11 == 1)
                         {
                             Pixel = new float4(r, g, b, a);
@@ -256,7 +257,7 @@ namespace ShapeScape.Shader.Shaders
                         {
                             Pixel = new float4(r, g, b, a);
                         }
-
+                        */
                         // Calculate color difference for this pixel.
                         // If it wasn't inside any of the tessel boundaries ( so if it wasnt in our shape ) then it wasn't draw, so pixel color is identical to canvas color, so color difference will be zero
                         // We compare to baseimage and not constructor because that's what we're trying to reconstruct, who cares what this shape drawing does to the constructor if it brings us closer to the base image we want it

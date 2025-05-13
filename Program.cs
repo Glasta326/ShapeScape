@@ -37,9 +37,9 @@ namespace ShapeScape
 
         /// <summary>
         /// Total amount of shapes that will get drawn to complete the image <br/> 
-        /// Defaults to 512
+        /// Defaults to 2048
         /// </summary>
-        public static int TotalShapes = 512;
+        public static int TotalShapes = 2048;
 
         /// <summary>
         /// Total amount of shapes being evolved in each cycle <br/>
@@ -56,7 +56,7 @@ namespace ShapeScape
         /// <summary>
         /// The shapes with the <see cref="SurvivalThreshold"/> lowest scores survive, the rest all die
         /// </summary>
-        public static int SurvivalThreshold = 50;
+        public static int SurvivalThreshold = 100;
 
         /// <summary>
         /// Controls how strong mutation effects between generations are.<br/>
@@ -136,7 +136,8 @@ namespace ShapeScape
         /// The highest number of tessels the program can ever encounter in a single polygon is 12 <br/>
         /// This comes from NPolygon having a max vertex count of 8, and applying the formula 2N - 4 to calculate tessel count from vertices
         /// </summary>
-        public const int MAX_TESSELS = 12;
+        // Currently only at 2 because NPolygon is unused
+        public const int MAX_TESSELS = 2;
 
 
         #endregion
@@ -203,16 +204,16 @@ namespace ShapeScape
             }
             using var t1 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
             using var t2 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t3 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t4 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t5 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t6 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t7 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t8 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t9 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t10 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t11 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
-            using var t12 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t3 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t4 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t5 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t6 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t7 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t8 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t9 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t10 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t11 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
+            //using var t12 = GraphicsDevice.GetDefault().AllocateReadOnlyBuffer<Tessel>(ShapePopulation);
 
             // Fill canvas with blank color before we start
             GraphicsDevice.GetDefault().For(Dimensions.X, Dimensions.Y, new Shaders.FillColor(constructorCanvasBuffer, PalletteCache.MostCommonColor()));
@@ -246,20 +247,20 @@ namespace ShapeScape
                     // Load data into buffers
                     t1.CopyFrom(tessLists[0]);
                     t2.CopyFrom(tessLists[1]);
-                    t3.CopyFrom(tessLists[2]);
-                    t4.CopyFrom(tessLists[3]);
-                    t5.CopyFrom(tessLists[4]);
-                    t6.CopyFrom(tessLists[5]);
-                    t7.CopyFrom(tessLists[6]);
-                    t8.CopyFrom(tessLists[7]);
-                    t9.CopyFrom(tessLists[8]);
-                    t10.CopyFrom(tessLists[9]);
-                    t11.CopyFrom(tessLists[10]);
-                    t12.CopyFrom(tessLists[11]);
+                    //t3.CopyFrom(tessLists[2]);
+                    //t4.CopyFrom(tessLists[3]);
+                    //t5.CopyFrom(tessLists[4]);
+                    //t6.CopyFrom(tessLists[5]);
+                    //t7.CopyFrom(tessLists[6]);
+                    //t8.CopyFrom(tessLists[7]);
+                    //t9.CopyFrom(tessLists[8]);
+                    //t10.CopyFrom(tessLists[9]);
+                    //t11.CopyFrom(tessLists[10]);
+                    //t12.CopyFrom(tessLists[11]);
 
                     // Run shader
                     GraphicsDevice.GetDefault().For(ShapePopulation, new Shaders.ScoreAllShapes(
-                    t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12,
+                    t1, t2, 
                     BaseImageBuffer, constructorCanvasBuffer, scoreBuffer));
                     scoreBuffer.CopyTo(score);
 

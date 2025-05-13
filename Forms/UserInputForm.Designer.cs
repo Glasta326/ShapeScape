@@ -58,9 +58,9 @@
 
             SeedText = AddLabeledInput("Seed [Random]:", ref y);
             ScaleText = AddLabeledInput("Downscale factor [20]:", ref y);
-            TotalShapesText = AddLabeledInput("Total Shapes [512]:", ref y);
+            TotalShapesText = AddLabeledInput("Total Shapes [2048]:", ref y);
             ShapePopulationText = AddLabeledInput("Shape Population [2500]:", ref y);
-            SurvivalThresholdText = AddLabeledInput("Survival Threshold [50]:", ref y);
+            SurvivalThresholdText = AddLabeledInput("Survival Threshold [100]:", ref y);
             EvolutionCyclesText = AddLabeledInput("Evolution Cycles [6]:", ref y);
             MutationStrengthText = AddLabeledInput("Mutation Strength [60]:", ref y);
 
